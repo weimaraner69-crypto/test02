@@ -40,6 +40,19 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 pythonpath = ["src"]
 
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/mirastudy/*", "src/observability/*", "*/tests/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
+
 [tool.mutmut]
 paths_to_mutate = "src/"
 tests_dir = "tests/"

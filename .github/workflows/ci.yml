@@ -86,7 +86,8 @@ jobs:
         run: uv run mypy src/
 
       - name: Test
-        run: uv run pytest -q --tb=short
+        run: uv run pytest -q --tb=short --cov --cov-report=term-missing
+          --cov-fail-under=80
 
       # ---------------------------------------------------------------
       # ミューテーションテスト（非ブロッキング）
