@@ -106,10 +106,10 @@
 
 | 計画 | Issue | Phase | 種別 |
 | ---- | ----- | ----- | ---- |
-| N-004 設定管理・エラーハンドリング強化 | #4（要作成） | 3-Hardening | Feature |
-| N-005 認証・権限の本番化              | #5（要作成） | 3-Hardening | Feature |
-| N-006 データ永続化                    | #6（要作成） | 3-Hardening | Feature |
-| B-001 子供向け学習機能の実装          | #7（要作成） | 4-Advanced  | Feature |
+| N-004 設定管理・エラーハンドリング強化 | [#3](https://github.com/weimaraner69-crypto/test02/issues/3) | 3-Hardening | Feature |
+| N-005 認証・権限の本番化              | [#4](https://github.com/weimaraner69-crypto/test02/issues/4) | 3-Hardening | Feature |
+| N-006 データ永続化                    | [#5](https://github.com/weimaraner69-crypto/test02/issues/5) | 3-Hardening | Feature |
+| B-001 子供向け学習機能の実装          | [#6](https://github.com/weimaraner69-crypto/test02/issues/6) | 4-Advanced  | Feature |
 
 ## 直近の変更履歴（最大10件）
 
