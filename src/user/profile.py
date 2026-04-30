@@ -4,13 +4,11 @@
 
 from __future__ import annotations
 
-from typing import Dict
-
 
 class UserProfileService:
     def __init__(self):
         # 実際はDB接続や初期化
-        self._profiles: Dict[str, dict] = {}
+        self._profiles: dict[str, dict] = {}
 
     def get_profile(self, uid: str) -> dict | None:
         """

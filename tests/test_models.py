@@ -1,6 +1,7 @@
 """ドメインモデルの不変条件テスト。"""
 
 import pytest
+
 from mirastudy.core.models import (
     PerformanceRecord,
     Question,

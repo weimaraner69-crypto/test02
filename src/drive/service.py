@@ -4,15 +4,13 @@ Google Drive API連携サービス雛形
 
 from __future__ import annotations
 
-from typing import List
-
 
 class DriveService:
     def __init__(self):
         # 実際はGoogle API認証・初期化
         pass
 
-    def list_pdfs_in_folder(self, folder_id: str) -> List[dict]:
+    def list_pdfs_in_folder(self, folder_id: str) -> list[dict]:
         """
         共有フォルダ内のPDF一覧取得（雛形）
         """

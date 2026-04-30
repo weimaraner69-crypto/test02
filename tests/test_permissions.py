@@ -4,6 +4,7 @@ FR: ロールに基づいた権限管理
 """
 
 import pytest
+
 from mirastudy.core.models import UserRole
 from mirastudy.domain.permissions import Permission, has_permission
 
@@ -68,20 +69,26 @@ class TestAllPermissions:
         """管理者はすべての権限を持つ。"""
         assert has_permission(UserRole.ADMIN, permission)
 
-    @pytest.mark.parametrize("permission", [
-        Permission.VIEW_KNOWLEDGE,
-        Permission.VIEW_OWN_HISTORY,
-    ])
+    @pytest.mark.parametrize(
+        "permission",
+        [
+            Permission.VIEW_KNOWLEDGE,
+            Permission.VIEW_OWN_HISTORY,
+        ],
+    )
     def test_student_has_allowed_permissions(self, permission: Permission) -> None:
         """学生は閲覧系権限を持つ。"""
         assert has_permission(UserRole.STUDENT, permission)
 
-    @pytest.mark.parametrize("permission", [
-        Permission.MANAGE_KNOWLEDGE,
-        Permission.VIEW_ALL_HISTORY,
-        Permission.MANAGE_FAMILY,
-        Permission.MANAGE_API_KEY,
-    ])
+    @pytest.mark.parametrize(
+        "permission",
+        [
+            Permission.MANAGE_KNOWLEDGE,
+            Permission.VIEW_ALL_HISTORY,
+            Permission.MANAGE_FAMILY,
+            Permission.MANAGE_API_KEY,
+        ],
+    )
     def test_student_lacks_privileged_permissions(self, permission: Permission) -> None:
         """学生は管理系権限を持たない。"""
         assert not has_permission(UserRole.STUDENT, permission)

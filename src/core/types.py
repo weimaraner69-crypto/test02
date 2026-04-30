@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import List, TypedDict
+from typing import TypedDict
 
 
 class UserProfile(TypedDict):
@@ -21,7 +21,7 @@ class UserProfile(TypedDict):
 class Question(TypedDict):
     text: str
     type: str
-    options: List[str]
+    options: list[str]
 
 
 class Answer(TypedDict):
@@ -32,4 +32,4 @@ class Answer(TypedDict):
 class CurriculumReference(TypedDict):
     chapter: str
     section: str
-    pages: List[int]
+    pages: list[int]

@@ -1,6 +1,7 @@
 """学年バリデーションのテスト（境界値テスト含む）。"""
 
 import pytest
+
 from mirastudy.core.exceptions import InvalidGradeError
 from mirastudy.core.models import Stage
 from mirastudy.domain.grade_validator import (
@@ -86,11 +87,14 @@ class TestIsValidGrade:
 class TestGetGradeLabel:
     """get_grade_label のテスト。"""
 
-    @pytest.mark.parametrize("grade,expected", [
-        (1, "第1学年"),
-        (3, "第3学年"),
-        (6, "第6学年"),
-    ])
+    @pytest.mark.parametrize(
+        "grade,expected",
+        [
+            (1, "第1学年"),
+            (3, "第3学年"),
+            (6, "第6学年"),
+        ],
+    )
     def test_grade_label_format(self, grade: int, expected: str) -> None:
         """学年ラベルが正しいフォーマットで返される。"""
         assert get_grade_label(grade) == expected

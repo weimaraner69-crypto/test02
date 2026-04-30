@@ -21,18 +21,22 @@ class Permission(Enum):
 
 # ロールごとの権限マッピング
 ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
-    UserRole.ADMIN: frozenset([
-        Permission.VIEW_KNOWLEDGE,
-        Permission.MANAGE_KNOWLEDGE,
-        Permission.VIEW_ALL_HISTORY,
-        Permission.VIEW_OWN_HISTORY,
-        Permission.MANAGE_FAMILY,
-        Permission.MANAGE_API_KEY,
-    ]),
-    UserRole.STUDENT: frozenset([
-        Permission.VIEW_KNOWLEDGE,
-        Permission.VIEW_OWN_HISTORY,
-    ]),
+    UserRole.ADMIN: frozenset(
+        [
+            Permission.VIEW_KNOWLEDGE,
+            Permission.MANAGE_KNOWLEDGE,
+            Permission.VIEW_ALL_HISTORY,
+            Permission.VIEW_OWN_HISTORY,
+            Permission.MANAGE_FAMILY,
+            Permission.MANAGE_API_KEY,
+        ]
+    ),
+    UserRole.STUDENT: frozenset(
+        [
+            Permission.VIEW_KNOWLEDGE,
+            Permission.VIEW_OWN_HISTORY,
+        ]
+    ),
 }
 
 

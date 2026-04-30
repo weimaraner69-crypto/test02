@@ -7,8 +7,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
-
 
 # ---------------------------------------------------------------------------
 # 列挙型
@@ -18,9 +16,9 @@ from typing import Optional
 class Stage(Enum):
     """学校段階を表す列挙型。"""
 
-    ES = "ES"    # 小学校（Elementary School）
+    ES = "ES"  # 小学校（Elementary School）
     JHS = "JHS"  # 中学校（Junior High School）
-    HS = "HS"    # 高校（High School）
+    HS = "HS"  # 高校（High School）
 
 
 class Subject(Enum):
@@ -36,7 +34,7 @@ class Subject(Enum):
 class UserRole(Enum):
     """ユーザーロールを表す列挙型。"""
 
-    ADMIN = "admin"      # 管理者（父）
+    ADMIN = "admin"  # 管理者（父）
     STUDENT = "student"  # 学生（子）
 
 
@@ -104,7 +102,8 @@ class Question:
 
     Attributes:
         text: 問題文。空文字列は許可しない。
-        question_type: 問題種別。"choice"（選択）・"calculation"（計算）・"description"（記述）のいずれか。
+        question_type: 問題種別。"choice"（選択）・"calculation"（計算）・
+            "description"（記述）のいずれか。
         options: 選択問題の選択肢リスト。記述・計算問題の場合は None。
 
     Raises:
@@ -113,7 +112,7 @@ class Question:
 
     text: str
     question_type: str
-    options: Optional[list[str]]
+    options: list[str] | None
 
     def __post_init__(self) -> None:
         """不変条件を検証する。"""
@@ -177,4 +176,4 @@ class LearningSession:
     topic: str
     questions: list[Question] = field(default_factory=list)
     performance: PerformanceRecord = field(default_factory=_default_performance)
-    curriculum_reference: Optional[CurriculumReference] = None
+    curriculum_reference: CurriculumReference | None = None

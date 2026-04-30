@@ -6,12 +6,11 @@
 from mirastudy.core.exceptions import InvalidGradeError
 from mirastudy.core.models import Stage
 
-
 # 学校段階ごとの有効学年範囲: {Stage: (最小学年, 最大学年)}
 GRADE_RANGES: dict[Stage, tuple[int, int]] = {
-    Stage.ES: (1, 6),   # 小学校: 1〜6年
+    Stage.ES: (1, 6),  # 小学校: 1〜6年
     Stage.JHS: (1, 3),  # 中学校: 1〜3年
-    Stage.HS: (1, 3),   # 高校: 1〜3年
+    Stage.HS: (1, 3),  # 高校: 1〜3年
 }
 
 

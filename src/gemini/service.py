@@ -4,15 +4,13 @@ Gemini API連携サービス雛形
 
 from __future__ import annotations
 
-from typing import Dict
-
 
 class GeminiService:
     def __init__(self, api_key: str):
         self.api_key = api_key
         # 実際はGoogle Generative AI SDK初期化
 
-    def generate_question(self, context: str, topic: str, grade: int) -> Dict | None:
+    def generate_question(self, context: str, topic: str, grade: int) -> dict | None:
         """
         Gemini APIで問題生成（雛形）
         """
