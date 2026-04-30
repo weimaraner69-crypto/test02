@@ -1,14 +1,16 @@
 """
 Google OAuth + Firebase Authentication サービス雛形
 """
-from typing import Optional
+
+from __future__ import annotations
+
 
 class AuthService:
     def __init__(self):
         # 実際はSDK初期化や設定を行う
         pass
 
-    def sign_in_with_google(self) -> Optional[dict]:
+    def sign_in_with_google(self) -> dict | None:
         """
         Googleアカウントでログイン（雛形）
         """
@@ -18,7 +20,7 @@ class AuthService:
             "uid": "sample_uid",
             "email": "user@example.com",
             "displayName": "サンプルユーザー",
-            "isNewUser": True
+            "isNewUser": True,
         }
 
     def setup_profile(self, uid: str, profile: dict) -> bool:

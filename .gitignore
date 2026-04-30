@@ -27,9 +27,8 @@ htmlcov/
 .coverage.*
 coverage.xml
 
-# pyproject.toml は bootstrap.sh で pyproject.toml.template から生成される。
-# テンプレートリポジトリではコミットしない。
-pyproject.toml
+# pyproject.toml はプロジェクト設定ファイルとして git 管理する。
+# pyproject.toml
 uv.lock
 
 # Hypothesis（テスト実行時の自動生成キャッシュ）

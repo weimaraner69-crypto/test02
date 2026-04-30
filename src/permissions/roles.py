@@ -1,8 +1,9 @@
 """
 権限管理（ロール・パーミッション）雛形
 """
+
 from enum import Enum, auto
-from typing import List
+
 
 class Permission(Enum):
     VIEW_KNOWLEDGE = auto()
@@ -12,6 +13,7 @@ class Permission(Enum):
     MANAGE_FAMILY = auto()
     MANAGE_API_KEY = auto()
 
+
 RolePermissions = {
     "admin": [
         Permission.VIEW_KNOWLEDGE,
@@ -19,13 +21,11 @@ RolePermissions = {
         Permission.VIEW_ALL_HISTORY,
         Permission.VIEW_OWN_HISTORY,
         Permission.MANAGE_FAMILY,
-        Permission.MANAGE_API_KEY
+        Permission.MANAGE_API_KEY,
     ],
-    "student": [
-        Permission.VIEW_KNOWLEDGE,
-        Permission.VIEW_OWN_HISTORY
-    ]
+    "student": [Permission.VIEW_KNOWLEDGE, Permission.VIEW_OWN_HISTORY],
 }
+
 
 def has_permission(user_role: str, permission: Permission) -> bool:
     """

@@ -1,8 +1,9 @@
 """
 src/user/profile.py のユーザープロファイル管理テスト
 """
-import pytest
+
 from src.user.profile import UserProfileService
+
 
 def test_set_and_get_profile():
     service = UserProfileService()
@@ -11,6 +12,7 @@ def test_set_and_get_profile():
     assert service.set_profile(uid, profile) is True
     result = service.get_profile(uid)
     assert result == profile
+
 
 def test_list_family_members():
     service = UserProfileService()

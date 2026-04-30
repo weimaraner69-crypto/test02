@@ -1,7 +1,11 @@
 """
 Google Drive API連携サービス雛形
 """
-from typing import List, Optional
+
+from __future__ import annotations
+
+from typing import List
+
 
 class DriveService:
     def __init__(self):
@@ -13,12 +17,9 @@ class DriveService:
         共有フォルダ内のPDF一覧取得（雛形）
         """
         # 実際はGoogle Drive API呼び出し
-        return [
-            {"id": "file1", "name": "sample1.pdf"},
-            {"id": "file2", "name": "sample2.pdf"}
-        ]
+        return [{"id": "file1", "name": "sample1.pdf"}, {"id": "file2", "name": "sample2.pdf"}]
 
-    def get_metadata(self, folder_id: str, subject: str) -> Optional[dict]:
+    def get_metadata(self, folder_id: str, subject: str) -> dict | None:
         """
         metadata.json取得（雛形）
         """

@@ -1,14 +1,16 @@
 """
 MiraStudy CLI統合アプリ（雛形）
 """
+
 from src.auth.service import AuthService
-from src.user.profile import UserProfileService
-from src.permissions.roles import Permission, has_permission
 from src.drive.service import DriveService
 from src.gemini.service import GeminiService
+from src.permissions.roles import Permission, has_permission
+from src.user.profile import UserProfileService
 
 # サンプルAPIキー（実運用は安全管理）
 API_KEY = "dummy-key"
+
 
 def main():
     print("=== MiraStudy CLI ===")
@@ -38,6 +40,7 @@ def main():
     gemini = GeminiService(api_key=API_KEY)
     question = gemini.generate_question("PDFコンテキスト", "算数", 3)
     print(f"Gemini生成問題: {question}")
+
 
 if __name__ == "__main__":
     main()

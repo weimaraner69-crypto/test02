@@ -1,14 +1,18 @@
 """
 ユーザープロファイル管理サービス雛形
 """
-from typing import Optional, Dict
+
+from __future__ import annotations
+
+from typing import Dict
+
 
 class UserProfileService:
     def __init__(self):
         # 実際はDB接続や初期化
         self._profiles: Dict[str, dict] = {}
 
-    def get_profile(self, uid: str) -> Optional[dict]:
+    def get_profile(self, uid: str) -> dict | None:
         """
         ユーザープロファイル取得
         """
@@ -27,4 +31,4 @@ class UserProfileService:
         """
         # 実際はprofile['familyMembers']参照
         admin = self._profiles.get(admin_uid)
-        return admin.get('familyMembers', []) if admin else []
+        return admin.get("familyMembers", []) if admin else []

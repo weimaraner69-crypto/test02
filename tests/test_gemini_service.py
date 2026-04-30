@@ -1,8 +1,9 @@
 """
 src/gemini/service.py のGemini API連携サービス雛形テスト
 """
-import pytest
+
 from src.gemini.service import GeminiService
+
 
 def test_generate_question():
     gemini = GeminiService(api_key="dummy-key")
