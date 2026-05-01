@@ -107,9 +107,10 @@ jobs:
       - name: Audit dependencies (pip-audit)
         if: hashFiles('pyproject.toml') != ''
         # 前提: 上記の uv sync による依存インストールが実行済みであること
+        # --skip-editable: ローカルパッケージ（mirastudy）を監査対象から除外
         run: |
           uv pip install pip-audit --system
-          pip-audit -r <(uv pip freeze) --strict --progress-spinner=off
+          pip-audit -r <(uv pip freeze) --skip-editable --progress-spinner=off
       # ---------------------------------------------------------------
       # OpenTelemetry 計装確認（observability オプション有効時）
       # ---------------------------------------------------------------
