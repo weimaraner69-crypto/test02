@@ -31,19 +31,23 @@
 
 ## 機能要件（FR）
 
-### FR-001 <!-- 機能名 -->
+### FR-001 認証・権限制御
 
-<!-- 例: FR-001 ユーザー認証
-- 入力：メールアドレス、パスワード
-- 出力：認証トークン（JWT）
-- 失敗時：InvalidCredentialsError を返し、ログに記録する
-- 担当モジュール：src/auth/
--->
-
-- 入力：
+- 入力：AUTH_MODE 環境変数（`mock` または `google`）
 - 出力：
+  - 認証済みユーザー情報 `dict`（uid / email / displayName / isNewUser）
+  - ロール（`admin` / `student` / `parent`）に基づく権限判定結果
+- 動作モード：
+  - `AuthMode.MOCK`：テスト用固定ダミーユーザーを返す（CI 向け）
+  - `AuthMode.GOOGLE`：将来の Google OAuth 実装のプレースホルダー（現在 `NotImplementedError`）
+- 権限マッピング：
+  - `admin`：VIEW_KNOWLEDGE / MANAGE_KNOWLEDGE / VIEW_ALL_HISTORY / VIEW_OWN_HISTORY / MANAGE_FAMILY / MANAGE_API_KEY
+  - `student`：VIEW_KNOWLEDGE / VIEW_OWN_HISTORY
+  - `parent`：VIEW_OWN_HISTORY / MANAGE_FAMILY
 - 失敗時：
-- 担当モジュール：
+  - プロファイル未取得（None）→ `AuthorizationError` を送出してフェイルクローズ（P-010）
+  - 不正 AUTH_MODE 値 → `logger.warning` を出力し `mock` にフォールバック
+- 担当モジュール：`src/auth/`、`src/permissions/`
 
 ### FR-010 <!-- 機能名 -->
 

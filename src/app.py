@@ -37,7 +37,8 @@ def main() -> None:
 
     print("=== MiraStudy CLI ===")
     try:
-        auth = AuthService()
+        # AUTH_MODE に応じた認証サービスを初期化する
+        auth = AuthService(mode=config.auth_mode)
         user = auth.sign_in_with_google()
         if user is None:
             raise AuthenticationError("サインインに失敗しました")
@@ -49,10 +50,14 @@ def main() -> None:
         profile = profile_service.get_profile(user["uid"])
         print(f"プロファイル: {profile}")
 
-        # 権限判定
-        role = profile.get("role", "student") if profile else "student"
-        if has_permission(role, Permission.VIEW_KNOWLEDGE):
-            print("知識共有フォルダ閲覧権限あり")
+        # 権限判定: VIEW_KNOWLEDGE がなければ処理を停止する
+        # profile が None は異常状態（フェイルクローズ P-010）
+        if profile is None:
+            raise AuthorizationError("プロファイルが取得できません。アクセスを拒否します。")
+        role = profile.get("role", "student")
+        if not has_permission(role, Permission.VIEW_KNOWLEDGE):
+            raise AuthorizationError(f"ロール '{role}' は VIEW_KNOWLEDGE 権限を持っていません")
+        print("知識共有フォルダ閲覧権限あり")
 
         # Drive連携
         drive = DriveService()

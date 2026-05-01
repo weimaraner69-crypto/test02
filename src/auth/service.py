@@ -1,26 +1,49 @@
 """
-Google OAuth + Firebase Authentication サービス雛形
+Google OAuth + Firebase Authentication サービス
+AUTH_MODE 環境変数でモック/本番を切り替える。
 """
 
 from __future__ import annotations
 
+import logging
+from enum import Enum
+
+logger = logging.getLogger(__name__)
+
+
+class AuthMode(Enum):
+    """認証モードの列挙型。"""
+
+    MOCK = "mock"
+    GOOGLE = "google"
+
 
 class AuthService:
-    def __init__(self):
-        # 実際はSDK初期化や設定を行う
-        pass
+    def __init__(self, mode: str = "mock") -> None:
+        """認証サービスを初期化する。mode は AUTH_MODE 環境変数から渡す。"""
+        self._mode = AuthMode(mode)
+        if self._mode is AuthMode.GOOGLE:
+            logger.warning(
+                "GOOGLE モードは未実装です。本番使用前に実装してください。"
+                "現在は sign_in_with_google() を呼び出すと NotImplementedError が発生します。"
+            )
 
     def sign_in_with_google(self) -> dict | None:
         """
-        Googleアカウントでログイン（雛形）
+        Googleアカウントでログインする。
+        - MOCK モード: テスト用固定ユーザーを返す
+        - GOOGLE モード: 将来実装予定（現在は NotImplementedError）
         """
-        # 実装例: Google OAuth 2.0 → Firebase Auth
-        # 実際は外部SDK/API呼び出し
+        if self._mode is AuthMode.GOOGLE:
+            raise NotImplementedError(
+                "Google OAuth は未実装です。AUTH_MODE=mock を使用してください"
+            )
+        # MOCK モード: テスト用固定ダミーユーザーを返す
         return {
-            "uid": "sample_uid",
-            "email": "user@example.com",
-            "displayName": "サンプルユーザー",
-            "isNewUser": True,
+            "uid": "mock_uid_001",
+            "email": "mock_user@example.com",
+            "displayName": "モックユーザー",
+            "isNewUser": False,
         }
 
     def setup_profile(self, uid: str, profile: dict) -> bool:

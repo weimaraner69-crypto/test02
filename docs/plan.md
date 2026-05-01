@@ -83,8 +83,11 @@
 
 - 目的：スタブ実装から実際の認証（Google OAuth など）と権限制御に切り替える
 - 受入条件：
-  - 認証フローが実際のプロバイダ（または環境変数で差し替え可能なモック）で動作する
-  - 権限ロール（student / admin 等）に基づくアクセス制御がエンドツーエンドで機能する
+  - 認証フローが `AuthMode.MOCK`（固定ダミーユーザー）で動作する
+  - `AuthMode.GOOGLE` は将来実装のプレースホルダー（`NotImplementedError`）として設置済み
+  - `AUTH_MODE` 環境変数でモード切り替え可能（不正値は `mock` にフォールバック）
+  - 権限ロール（student / admin / parent）に基づくアクセス制御がエンドツーエンドで機能する
+  - プロファイル未取得時はフェイルクローズ（`AuthorizationError` 送出）する
   - テストでモック認証を使用し CI が通過する
 - 依存：N-004
 - 触る領域：`src/auth/`, `src/permissions/`, `tests/`

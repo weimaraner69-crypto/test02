@@ -32,6 +32,8 @@ class AppConfig:
     drive_folder_id: str = field(default="folder1")
     gemini_topic: str = field(default="算数")
     gemini_grade: int = field(default=3)
+    # 認証モード: mock（テスト用固定ユーザー）/ google（将来の Google OAuth 対応）
+    auth_mode: str = field(default="mock")
 
     @classmethod
     def from_env(cls) -> AppConfig:
@@ -52,10 +54,21 @@ class AppConfig:
                 grade_raw,
             )
             grade = 3
+        # auth_mode の許可値チェック（不正値は mock にフォールバック）
+        _valid_auth_modes = {"mock", "google"}
+        auth_mode_raw = os.environ.get("AUTH_MODE", "mock")
+        if auth_mode_raw not in _valid_auth_modes:
+            logger.warning(
+                "AUTH_MODE の値 %r が不正です。有効値: %s。デフォルト値 'mock' を使用します。",
+                auth_mode_raw,
+                ", ".join(sorted(_valid_auth_modes)),
+            )
+            auth_mode_raw = "mock"
         return cls(
             api_key=os.environ.get("GEMINI_API_KEY", ""),
             log_level=os.environ.get("LOG_LEVEL", "INFO"),
             drive_folder_id=os.environ.get("DRIVE_FOLDER_ID", "folder1"),
             gemini_topic=os.environ.get("GEMINI_TOPIC", "算数"),
             gemini_grade=grade,
+            auth_mode=auth_mode_raw,
         )

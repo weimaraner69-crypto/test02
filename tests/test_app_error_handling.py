@@ -81,3 +81,18 @@ def test_main_error_is_logged(caplog: pytest.LogCaptureFixture) -> None:
         with _pytest.raises(AuthenticationError):
             main()
     assert any("認証エラー" in record.message for record in caplog.records)
+
+
+# ---- N-005 拡充テスト ----
+
+
+def test_main_raises_authorization_error_for_no_permission_role() -> None:
+    # parent ロールは VIEW_KNOWLEDGE 権限を持たないため AuthorizationError が送出される
+    import pytest as _pytest
+
+    # parent ロールを持つダミーユーザーを返すようにモックする
+    dummy_user = {"uid": "u1", "displayName": "Test Parent", "role": "parent"}
+    with patch("src.app.AuthService") as mock_auth:
+        mock_auth.return_value.sign_in_with_google.return_value = dummy_user
+        with _pytest.raises(AuthorizationError):
+            main()
