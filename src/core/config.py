@@ -27,7 +27,7 @@ def _load_dotenv() -> None:
 class AppConfig:
     """アプリケーション設定。環境変数から構築する。"""
 
-    api_key: str = field(default="")
+    api_key: str = field(default="", repr=False)
     log_level: str = field(default="INFO")
     drive_folder_id: str = field(default="folder1")
     gemini_topic: str = field(default="算数")
@@ -40,6 +40,12 @@ class AppConfig:
         grade_raw = os.environ.get("GEMINI_GRADE", "3")
         try:
             grade = int(grade_raw)
+            if grade < 1 or grade > 6:
+                logger.warning(
+                    "GEMINI_GRADE の値 %r が有効範囲（1〜6）外です。デフォルト値 3 を使用します。",
+                    grade_raw,
+                )
+                grade = 3
         except ValueError:
             logger.warning(
                 "GEMINI_GRADE の値 %r が整数に変換できません。デフォルト値 3 を使用します。",

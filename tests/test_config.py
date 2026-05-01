@@ -76,3 +76,17 @@ def test_config_grade_boundary_max(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("GEMINI_GRADE", "6")
     config = AppConfig.from_env()
     assert config.gemini_grade == 6
+
+
+def test_config_grade_below_min_falls_back_to_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """GEMINI_GRADE = 0（最小値未満）が grade=3 にフォールバックする。"""
+    monkeypatch.setenv("GEMINI_GRADE", "0")
+    config = AppConfig.from_env()
+    assert config.gemini_grade == 3
+
+
+def test_config_grade_above_max_falls_back_to_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """GEMINI_GRADE = 7（最大値超過）が grade=3 にフォールバックする。"""
+    monkeypatch.setenv("GEMINI_GRADE", "7")
+    config = AppConfig.from_env()
+    assert config.gemini_grade == 3

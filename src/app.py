@@ -41,7 +41,7 @@ def main() -> None:
         user = auth.sign_in_with_google()
         if user is None:
             raise AuthenticationError("サインインに失敗しました")
-        print(f"ログイン: {user['displayName']} ({user['email']})")
+        print(f"ログイン: {user['displayName']}")
 
         # プロファイル管理
         profile_service = UserProfileService()
