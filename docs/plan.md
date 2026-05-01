@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Hardening**（N-001〜N-005 完了、N-006 着手待ち）
+- フェーズ：**Hardening**（N-001〜N-006 完了、次タスク選定待ち）
 - ブロッカー：なし
-- 直近の重要決定：N-005 完了・認証モード切り替えと RBAC を導入（2026-05-02）
+- 直近の重要決定：N-006 完了・SQLite 永続化と移行手順を整備（2026-05-02）
 
 ## ロードマップ（概略）
 
@@ -38,7 +38,7 @@
 - 目的：CI（lint/type/test/policy_check）を安定稼働させ、最低限の品質を自動判定できるようにする
 - 受入条件：
   - ✅ pyproject.toml 整備（ruff/mypy/pytest 設定）
-  - ✅ パッケージ構造配置（各サブパッケージに __init__.py）
+  - ✅ パッケージ構造配置（各サブパッケージに `__init__.py`）
   - ✅ CI 全ステップ通過（policy/lint/format/type/test）
   - ✅ ポリシーチェック誤検知なし
 - 依存：なし
@@ -95,11 +95,12 @@
 
 ### N-006 データ永続化
 
+- **✅ 完了（2026-05-02）**
 - 目的：インメモリ状態をデータベース（SQLite または PostgreSQL）に移行する
 - 受入条件：
-  - ユーザープロファイル・学習進捗がDB に保存・取得できる
-  - マイグレーション手順が `docs/runbook.md` に記載されている
-  - テスト用インメモリ DB（SQLite + pytest-fixtures）で CI が通過する
+  - ✅ ユーザープロファイル・学習進捗が DB に保存・取得できる
+  - ✅ マイグレーション手順が `docs/runbook.md` に記載されている
+  - ✅ テスト用インメモリ DB（SQLite + pytest-fixtures）で CI が通過する（140 passed, カバレッジ 97.12%）
 - 依存：N-005
 - 触る領域：`src/`, `tests/`, `docs/runbook.md`
 
@@ -110,18 +111,19 @@
 ## GitHub Issue / Project 対応表
 
 | 計画 | Issue | Phase | 種別 |
-| ---- | ----- | ----- | ---- |
+| --- | --- | --- | --- |
 | N-004 設定管理・エラーハンドリング強化 | [#3](https://github.com/weimaraner69-crypto/test02/issues/3) | 3-Hardening | Feature |
-| N-005 認証・権限の本番化              | [#4](https://github.com/weimaraner69-crypto/test02/issues/4) | 3-Hardening | Feature |
-| N-006 データ永続化                    | [#5](https://github.com/weimaraner69-crypto/test02/issues/5) | 3-Hardening | Feature |
-| B-001 子供向け学習機能の実装          | [#6](https://github.com/weimaraner69-crypto/test02/issues/6) | 4-Advanced  | Feature |
+| N-005 認証・権限の本番化 | [#4](https://github.com/weimaraner69-crypto/test02/issues/4) | 3-Hardening | Feature |
+| N-006 データ永続化 | [#5](https://github.com/weimaraner69-crypto/test02/issues/5) | 3-Hardening | Feature |
+| B-001 子供向け学習機能の実装 | [#6](https://github.com/weimaraner69-crypto/test02/issues/6) | 4-Advanced | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-02: N-006 完了（SQLite 永続化、runbook/architecture 更新、140 passed / 97.12%）
 - 2026-05-02: N-005 完了（認証モード切り替え、RBAC、PR #8 マージ、128 passed / 96.83%）
 - 2026-05-02: N-004 完了（AppConfig 設定管理・エラーハンドリング強化、PR #7 マージ、117 passed / 98.50%）
 - 2026-04-30: Phase 3 計画追加（N-004〜N-006 策定、B-001 バックログ登録）
 - 2026-04-30: 今月のゴール G1〜G3 記録
 - 2026-04-30: N-003 完了（constraints.py 境界値テスト、pytest --cov CI追加、カバレッジ 99.32%）
 - 2026-04-30: N-002 完了（MVPパイプライン統合テスト、test_main_pipeline.py追加）
-- 2026-04-30: N-001 完了（pyproject.toml, __init__.py, CI ステップ有効化）
+- 2026-04-30: N-001 完了（`pyproject.toml`, `__init__.py`, CI ステップ有効化）

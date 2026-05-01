@@ -4,6 +4,12 @@ outputs/
 
 # ローカルデータ
 data/raw/
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+data/**/*.db
+data/**/*.sqlite
+data/**/*.sqlite3
 
 # 環境変数（秘密情報）
 .env

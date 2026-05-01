@@ -34,6 +34,7 @@ def main() -> None:
     """メインパイプライン。設定ロード → 認証 → プロファイル → 権限判定 → Drive → Gemini。"""
     config = AppConfig.from_env()
     _setup_logging(config.log_level)
+    profile_service: UserProfileService | None = None
 
     print("=== MiraStudy CLI ===")
     try:
@@ -42,13 +43,13 @@ def main() -> None:
         user = auth.sign_in_with_google()
         if user is None:
             raise AuthenticationError("サインインに失敗しました")
-        print(f"ログイン: {user['displayName']}")
+        print("ログイン成功")
 
         # プロファイル管理
-        profile_service = UserProfileService()
+        profile_service = UserProfileService(db_path=config.database_path)
         profile_service.set_profile(user["uid"], user)
         profile = profile_service.get_profile(user["uid"])
-        print(f"プロファイル: {profile}")
+        print("プロファイルを保存しました")
 
         # 権限判定: VIEW_KNOWLEDGE がなければ処理を停止する
         # profile が None は異常状態（フェイルクローズ P-010）
@@ -71,7 +72,21 @@ def main() -> None:
         question = gemini.generate_question(
             "PDFコンテキスト", config.gemini_topic, config.gemini_grade
         )
+        if question is None:
+            raise ValidationError("Gemini から問題を取得できませんでした")
         print(f"Gemini生成問題: {question}")
+
+        progress = {
+            "topic": config.gemini_topic,
+            "grade": config.gemini_grade,
+            "status": "generated",
+            "lastQuestion": question["question"]["text"],
+        }
+        profile_service.set_learning_progress(user["uid"], config.gemini_topic, progress)
+        saved_progress = profile_service.get_learning_progress(user["uid"], config.gemini_topic)
+        if saved_progress is None:
+            raise ValidationError("学習進捗を再取得できませんでした")
+        print("学習進捗を保存しました")
 
     except AuthenticationError as e:
         logger.error("認証エラー: %s", e)
@@ -85,6 +100,9 @@ def main() -> None:
     except DomainError as e:
         logger.error("ドメインエラー: %s", e)
         raise
+    finally:
+        if profile_service is not None:
+            profile_service.close()
 
 
 if __name__ == "__main__":

@@ -49,17 +49,25 @@
   - 不正 AUTH_MODE 値 → `logger.warning` を出力し `mock` にフォールバック
 - 担当モジュール：`src/auth/`、`src/permissions/`
 
-### FR-010 <!-- 機能名 -->
-
-<!-- 例: FR-010 データインポート
-- 入力：CSV ファイル（最大 100MB）
-- 出力：正規化されたデータベースレコード
-- 担当モジュール：src/data/
--->
+### FR-010 SQLite 永続化
 
 - 入力：
+  - `DATABASE_PATH` 環境変数で指定された SQLite ファイルパス
+  - ユーザープロファイル `dict`
+  - 学習進捗 `dict`（topic / status / grade など）
 - 出力：
-- 担当モジュール：
+  - SQLite に保存されたユーザープロファイル
+  - SQLite に保存された学習進捗
+  - 管理者プロフィールの `familyMembers` を参照した家族メンバー一覧
+  - 同一 DB ファイルを再オープンした後も取得可能な永続データ
+- 保存対象：
+  - ユーザープロファイル（uid 単位）
+  - 学習進捗（uid + topic 単位）
+  - 家族メンバー情報（admin の `familyMembers`）
+- テスト要件：
+  - `pytest` fixture を用いた SQLite インメモリ DB で保存・取得を検証する
+  - ファイルベース DB を再オープンした後もプロファイルが取得できることを検証する
+- 担当モジュール：`src/user/`、`src/app.py`、`docs/runbook.md`
 
 <!-- 必要に応じて FR-020, FR-030 ... を追加 -->
 
