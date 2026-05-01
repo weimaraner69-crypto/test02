@@ -15,6 +15,7 @@ def test_config_defaults() -> None:
     config = AppConfig()
     assert config.api_key == ""
     assert config.log_level == "INFO"
+    assert config.database_path == "data/mirastudy.db"
     assert config.drive_folder_id == "folder1"
     assert config.gemini_topic == "算数"
     assert config.gemini_grade == 3
@@ -24,6 +25,7 @@ def test_config_from_env_all_set(monkeypatch: pytest.MonkeyPatch) -> None:
     """環境変数がすべて設定された場合、正しく読み込まれる。"""
     monkeypatch.setenv("GEMINI_API_KEY", "test-key-123")
     monkeypatch.setenv("LOG_LEVEL", "DEBUG")
+    monkeypatch.setenv("DATABASE_PATH", "data/test.db")
     monkeypatch.setenv("DRIVE_FOLDER_ID", "test-folder")
     monkeypatch.setenv("GEMINI_TOPIC", "理科")
     monkeypatch.setenv("GEMINI_GRADE", "5")
@@ -31,6 +33,7 @@ def test_config_from_env_all_set(monkeypatch: pytest.MonkeyPatch) -> None:
     config = AppConfig.from_env()
     assert config.api_key == "test-key-123"
     assert config.log_level == "DEBUG"
+    assert config.database_path == "data/test.db"
     assert config.drive_folder_id == "test-folder"
     assert config.gemini_topic == "理科"
     assert config.gemini_grade == 5
@@ -38,12 +41,20 @@ def test_config_from_env_all_set(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_config_from_env_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     """環境変数が未設定の場合はデフォルト値が使われる。"""
-    for key in ["GEMINI_API_KEY", "LOG_LEVEL", "DRIVE_FOLDER_ID", "GEMINI_TOPIC", "GEMINI_GRADE"]:
+    for key in [
+        "GEMINI_API_KEY",
+        "LOG_LEVEL",
+        "DATABASE_PATH",
+        "DRIVE_FOLDER_ID",
+        "GEMINI_TOPIC",
+        "GEMINI_GRADE",
+    ]:
         monkeypatch.delenv(key, raising=False)
 
     config = AppConfig.from_env()
     assert config.api_key == ""
     assert config.log_level == "INFO"
+    assert config.database_path == "data/mirastudy.db"
     assert config.drive_folder_id == "folder1"
     assert config.gemini_topic == "算数"
     assert config.gemini_grade == 3
@@ -90,3 +101,14 @@ def test_config_grade_above_max_falls_back_to_default(monkeypatch: pytest.Monkey
     monkeypatch.setenv("GEMINI_GRADE", "7")
     config = AppConfig.from_env()
     assert config.gemini_grade == 3
+
+
+def test_config_database_path_invalid_falls_back_to_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """DATABASE_PATH に危険な相対パスが指定された場合は既定値に戻す。"""
+    monkeypatch.setenv("DATABASE_PATH", "../../outside/app.db")
+
+    config = AppConfig.from_env()
+
+    assert config.database_path == "data/mirastudy.db"

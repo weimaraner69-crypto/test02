@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class AppConfig:
 
     api_key: str = field(default="", repr=False)
     log_level: str = field(default="INFO")
+    database_path: str = field(default="data/mirastudy.db")
     drive_folder_id: str = field(default="folder1")
     gemini_topic: str = field(default="算数")
     gemini_grade: int = field(default=3)
@@ -64,9 +66,20 @@ class AppConfig:
                 ", ".join(sorted(_valid_auth_modes)),
             )
             auth_mode_raw = "mock"
+        database_path_raw = os.environ.get("DATABASE_PATH", "data/mirastudy.db")
+        database_path_obj = Path(database_path_raw)
+        if database_path_raw != ":memory:" and (
+            database_path_obj.is_absolute() or ".." in database_path_obj.parts
+        ):
+            logger.warning(
+                "DATABASE_PATH の値 %r は不正です。既定値 'data/mirastudy.db' を使用します。",
+                database_path_raw,
+            )
+            database_path_raw = "data/mirastudy.db"
         return cls(
             api_key=os.environ.get("GEMINI_API_KEY", ""),
             log_level=os.environ.get("LOG_LEVEL", "INFO"),
+            database_path=database_path_raw,
             drive_folder_id=os.environ.get("DRIVE_FOLDER_ID", "folder1"),
             gemini_topic=os.environ.get("GEMINI_TOPIC", "算数"),
             gemini_grade=grade,

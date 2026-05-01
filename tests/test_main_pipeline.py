@@ -4,6 +4,10 @@
 の一連のフローが例外なく動作することを検証する。
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from src.app import main
 from src.auth.service import AuthService
 from src.drive.service import DriveService
@@ -11,9 +15,13 @@ from src.gemini.service import GeminiService
 from src.permissions.roles import Permission, has_permission
 from src.user.profile import UserProfileService
 
+if TYPE_CHECKING:
+    import pytest
 
-def test_main_pipeline_no_exception():
+
+def test_main_pipeline_no_exception(monkeypatch: pytest.MonkeyPatch) -> None:
     """main() が例外なく実行できることを確認する。"""
+    monkeypatch.setenv("DATABASE_PATH", ":memory:")
     main()
 
 
@@ -25,13 +33,14 @@ def test_auth_returns_user_dict():
     assert {"uid", "email", "displayName"}.issubset(user.keys())
 
 
-def test_profile_set_and_get():
+def test_profile_set_and_get() -> None:
     """プロファイルを保存した後に取得できる。"""
-    service = UserProfileService()
+    service = UserProfileService(db_path=":memory:")
     uid = "test_uid_001"
     profile = {"uid": uid, "email": "test@example.com", "role": "student"}
     assert service.set_profile(uid, profile) is True
     result = service.get_profile(uid)
+    service.close()
     assert result is not None
     assert result["uid"] == uid
 
@@ -83,7 +92,7 @@ def test_gemini_generate_question_structure():
     assert isinstance(result["question"]["options"], list)
 
 
-def test_full_pipeline_flow():
+def test_full_pipeline_flow() -> None:
     """MVP パイプライン全体フローが整合して動作する。"""
     # 認証
     auth = AuthService()
@@ -91,10 +100,16 @@ def test_full_pipeline_flow():
     assert user is not None
 
     # プロファイル設定・取得
-    profile_service = UserProfileService()
+    profile_service = UserProfileService(db_path=":memory:")
     profile_service.set_profile(user["uid"], user)
     profile = profile_service.get_profile(user["uid"])
+    profile_service.set_learning_progress(
+        user["uid"], "算数", {"topic": "算数", "status": "generated"}
+    )
+    progress = profile_service.get_learning_progress(user["uid"], "算数")
+    profile_service.close()
     assert profile is not None
+    assert progress is not None
 
     # 権限判定
     role = profile.get("role", "student")

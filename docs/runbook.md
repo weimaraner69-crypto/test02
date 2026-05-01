@@ -7,7 +7,7 @@
 ## 前提
 
 - 秘密情報はリポジトリに含めない（P-002）
-- <!-- プロジェクト固有の前提を追加 -->
+- `.env.example` を `.env` にコピーし、`AUTH_MODE` と `DATABASE_PATH` を確認する
 
 ## セットアップ
 
@@ -15,7 +15,7 @@
 
 ```bash
 git clone <repository-url>
-cd {{PROJECT_NAME}}
+cd test02
 ```
 
 ### 2. 環境の準備
@@ -44,19 +44,24 @@ cp .env.example .env
 # ⚠️ .env は絶対にコミットしない
 ```
 
+最低限確認する変数:
+
+- `AUTH_MODE=mock` でローカル検証を行う
+- `DATABASE_PATH=data/mirastudy.db` で SQLite ファイル保存先を指定する
+
 ## 代表コマンド
 
 ### 静的解析
 
 ```bash
 # リンター
-{{RUN_PREFIX}} {{LINTER}}
+ruff check .
 
 # フォーマッタ（チェックのみ）
-{{RUN_PREFIX}} {{FORMATTER}}
+ruff format --check .
 
 # 型チェック（テストディレクトリも含める）
-{{RUN_PREFIX}} {{TYPE_CHECKER}}
+mypy src/ tests/ --ignore-missing-imports
 # ⚠️ 型チェックのスコープにテストディレクトリを必ず含めること
 ```
 
@@ -69,14 +74,30 @@ Copilot エージェントの場合は `get_errors` ツール（filePaths 省略
 
 ```bash
 # 全テスト実行
-{{RUN_PREFIX}} {{TEST_RUNNER}}
+.venv/bin/python -m pytest -q --tb=short --cov=src --cov-report=term-missing
+```
+
+### ローカル実行
+
+```bash
+.venv/bin/python -m src.app
+```
+
+初回実行時に `DATABASE_PATH` で指定した SQLite ファイルと必要テーブルを自動生成する。
+
+### SQLite の確認
+
+```bash
+sqlite3 data/mirastudy.db ".tables"
+sqlite3 data/mirastudy.db "SELECT count(*) FROM user_profiles;"
+sqlite3 data/mirastudy.db "SELECT count(*) FROM learning_progress;"
 ```
 
 ### ポリシーチェック
 
 ```bash
 # 禁止操作・秘密情報検出
-{{RUN_PREFIX}} python ci/policy_check.py
+.venv/bin/python ci/policy_check.py
 ```
 
 ## 生成物の扱い
@@ -92,7 +113,7 @@ Copilot エージェントの場合は `get_errors` ツール（filePaths 省略
 ### CI 失敗
 
 1. GitHub Actions のログで失敗箇所を特定する
-2. ローカルで再現する（`{{RUN_PREFIX}} {{TEST_RUNNER}}`）
+2. ローカルで再現する（`.venv/bin/python -m pytest -q --tb=short --cov=src --cov-report=term-missing`）
 3. 修正して再プッシュする
 
 ### 設定の破損
@@ -100,10 +121,57 @@ Copilot エージェントの場合は `get_errors` ツール（filePaths 省略
 1. `configs/` のデフォルト設定に戻す
 2. テストを実行して正常動作を確認する
 
+### SQLite ファイルの破損・初期化
+
+1. 破損した DB を退避する
+
+   ```bash
+   mv data/mirastudy.db "data/mirastudy.db.bak.$(date +%Y%m%d-%H%M%S)"
+   ```
+
+2. アプリを再実行してスキーマを自動再生成する
+
+   ```bash
+   .venv/bin/python -m src.app
+   ```
+
+3. 必要に応じてバックアップから `user_profiles` / `learning_progress` を手動移行する
+
 ### 依存関係の問題
 
 1. ロックファイルを削除して再インストール
 2. CI で動作確認する
+
+## マイグレーション手順
+
+現時点の SQLite スキーマは `UserProfileService` 初期化時に自動生成される。
+列追加やテーブル変更が必要になった場合は次の手順で移行する。
+
+1. 既存 DB をバックアップする
+
+   ```bash
+   cp data/mirastudy.db "data/mirastudy.db.backup.$(date +%Y%m%d-%H%M%S)"
+   ```
+
+2. 変更後コードで新スキーマを初期化する
+
+   ```bash
+   .venv/bin/python -m src.app
+   ```
+
+3. 必要なデータを SQLite で移し替える
+
+   ```bash
+   sqlite3 data/mirastudy.db ".schema"
+   # 例: old_learning_progress から learning_progress へ移行
+   sqlite3 data/mirastudy.db "INSERT OR REPLACE INTO learning_progress (uid, topic, progress_json) SELECT uid, topic, progress_json FROM old_learning_progress;"
+   ```
+
+4. 移行後にテストを実行して整合性を確認する
+
+   ```bash
+   .venv/bin/python -m pytest -q --tb=short --cov=src --cov-report=term-missing
+   ```
 
 ## モバイルでの開発
 
