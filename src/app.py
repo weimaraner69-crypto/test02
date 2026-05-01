@@ -83,9 +83,7 @@ def main() -> None:
             "lastQuestion": question["question"]["text"],
         }
         profile_service.set_learning_progress(user["uid"], config.gemini_topic, progress)
-        saved_progress = profile_service.get_learning_progress(
-            user["uid"], config.gemini_topic
-        )
+        saved_progress = profile_service.get_learning_progress(user["uid"], config.gemini_topic)
         if saved_progress is None:
             raise ValidationError("学習進捗を再取得できませんでした")
         print("学習進捗を保存しました")
