@@ -56,9 +56,7 @@ def main() -> None:
             raise AuthorizationError("プロファイルが取得できません。アクセスを拒否します。")
         role = profile.get("role", "student")
         if not has_permission(role, Permission.VIEW_KNOWLEDGE):
-            raise AuthorizationError(
-                f"ロール '{role}' は VIEW_KNOWLEDGE 権限を持っていません"
-            )
+            raise AuthorizationError(f"ロール '{role}' は VIEW_KNOWLEDGE 権限を持っていません")
         print("知識共有フォルダ閲覧権限あり")
 
         # Drive連携
