@@ -79,7 +79,7 @@ src/
 | drive | core | auth, permissions, user |
 | gemini | core | auth, permissions, user |
 | learning | core, domain, user, gemini | auth, permissions |
-| observability | （外部: OTel SDK） | core, domain |
+| observability | （外部: OTel SDK） | core, domain, auth, gemini, learning |
 | sample | （なし） | core, domain |
 
 ## 不変条件
