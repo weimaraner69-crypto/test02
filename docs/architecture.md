@@ -16,6 +16,7 @@ src/
 ├─ gemini/          問題生成
 ├─ permissions/     ロールと権限制御
 ├─ user/            SQLite によるプロファイル・学習進捗の永続化
+├─ learning/        学習サービス（コンテンツ配信・問題生成・進捗集計）
 ├─ observability/   OpenTelemetry 計装（オプショナル）
 └─ sample/          Design by Contract のサンプル実装
 ```
@@ -77,6 +78,7 @@ src/
 | user | core | auth, drive, gemini |
 | drive | core | auth, permissions, user |
 | gemini | core | auth, permissions, user |
+| learning | core, domain, user, gemini | auth, permissions |
 | observability | （外部: OTel SDK） | core, domain |
 | sample | （なし） | core, domain |
 

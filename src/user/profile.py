@@ -108,6 +108,20 @@ class UserProfileService:
             )
         return True
 
+    def list_all_learning_progress(self, uid: str) -> list[dict]:
+        """指定ユーザーのすべての学習進捗を一覧で返す。"""
+        rows = self._connection.execute(
+            "SELECT progress_json FROM learning_progress WHERE uid = ?",
+            (uid,),
+        ).fetchall()
+        result: list[dict] = []
+        for (progress_json,) in rows:
+            try:
+                result.append(self._deserialize_payload(progress_json))
+            except Exception:
+                continue
+        return result
+
     def list_family_members(self, admin_uid: str) -> list:
         """
         管理者の家族メンバー一覧取得（雛形）

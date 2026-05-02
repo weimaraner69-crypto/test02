@@ -14,8 +14,10 @@ from src.core.exceptions import (
     DomainError,
     ValidationError,
 )
+from src.domain.learning import Subject
 from src.drive.service import DriveService
 from src.gemini.service import GeminiService
+from src.learning.service import LearningService
 from src.permissions.roles import Permission, has_permission
 from src.user.profile import UserProfileService
 
@@ -87,6 +89,23 @@ def main() -> None:
         if saved_progress is None:
             raise ValidationError("学習進捗を再取得できませんでした")
         print("学習進捗を保存しました")
+
+        # 学習機能: 学年別コンテンツ配信・問題生成
+        learning = LearningService(
+            profile_service=profile_service,
+            gemini_service=gemini,
+        )
+        content = learning.get_content_for_grade(config.gemini_grade, Subject.MATH)
+        if content is not None:
+            print(f"学年コンテンツ: {content.title}")
+
+        topic_key = config.gemini_topic
+        learning.generate_question(user["uid"], config.gemini_grade, Subject.MATH, topic_key)
+        print("学習問題を生成しました")
+
+        learning.record_answer(user["uid"], Subject.MATH, topic_key, is_correct=True)
+        summary = learning.get_progress_summary(user["uid"], Subject.MATH)
+        print(f"進捗サマリー: {summary}")
 
     except AuthenticationError as e:
         logger.error("認証エラー: %s", e)
