@@ -10,7 +10,7 @@
 
 - フェーズ：**Advanced**（N-001〜N-007 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-007 完了（子供向け学習機能、PR #10 マージ 2026-05-02）
+- 直近の重要決定：N-008〜N-010 計画追加（FR-020拡充・observability・CLI/runbook 2026-05-02）
 
 ## ロードマップ（概略）
 
@@ -32,7 +32,56 @@
 
 ## Next（自動実行対象：最大3件）
 
-### N-001 リポジトリ基盤と CI 品質ゲートの確立
+### N-008 FR-020 拡充（理科・社会・英語カタログ追加）
+
+- **⏳ 未着手**
+- 目的：`CONTENT_CATALOG` に理科・社会・英語の各6学年コンテンツを追加し、FR-020 を完成させる
+- 受入条件：
+  - [ ] Subject.SCIENCE / SOCIAL / ENGLISH × 学年1〜6（計18エントリ）を追加
+  - [ ] `get_content()` で全科目・全学年が取得できる
+  - [ ] テストで全エントリを検証する
+  - [ ] CI 通過（ruff/mypy/pytest/coverage 80%+）
+- 依存：N-007
+- 触る領域：`src/domain/learning.py`、`tests/test_domain_learning.py`
+
+### N-009 observability 統合（OpenTelemetry + トレーシング）
+
+- **⏳ 未着手**
+- 目的：既存の `src/observability/tracing.py` をメインパイプラインに統合し、分散トレーシングを有効化する
+- 受入条件：
+  - [ ] `src/app.py` に OpenTelemetry トレーシングを統合する
+  - [ ] 主要サービス（auth/gemini/learning）にスパンを追加する
+  - [ ] observability が無効時（OTel 未設定）でも安全に動作する（フェイルクローズ）
+  - [ ] テストで統合を検証する
+  - [ ] CI 通過
+- 依存：N-008
+- 触る領域：`src/observability/`、`src/app.py`、`tests/`
+
+### N-010 NFR-030 CLI/runbook 整備（1コマンド実行・Docker 対応）
+
+- **⏳ 未着手**
+- 目的：1コマンドでパイプラインを実行できる CLI エントリポイントと Docker 環境を整備する
+- 受入条件：
+  - [ ] Makefile または run スクリプトで1コマンド実行できる
+  - [ ] Dockerfile を作成し `docker build` / `docker run` が成功する
+  - [ ] `docs/runbook.md` にローカル実行・Docker 実行手順を追記する
+  - [ ] CI 通過
+- 依存：N-009
+- 触る領域：`Makefile`（新規）、`Dockerfile`（新規）、`docs/runbook.md`
+
+## Backlog（保留）
+
+### B-002 Google OAuth 本実装
+
+- **⏳ 計画のみ（実装は将来フェーズ）**
+- 目的：`src/auth/service.py` の `AuthMode.GOOGLE` プレースホルダーを Google OAuth 2.0 で本実装する
+- 受入条件：
+  - [ ] Google OAuth 2.0 フローの実装
+  - [ ] 環境変数（GOOGLE_CLIENT_ID/SECRET）による設定
+  - [ ] テストでモック OAuth を検証
+  - [ ] CI 通過
+- 依存：N-010
+- 触る領域：`src/auth/`、`tests/`
 
 - **✅ 完了（2026-04-30）**
 - 目的：CI（lint/type/test/policy_check）を安定稼働させ、最低限の品質を自動判定できるようにする
@@ -120,7 +169,7 @@
 
 ## Backlog（保留）
 
-（なし）
+（B-002 参照）
 
 ## GitHub Issue / Project 対応表
 
@@ -130,9 +179,14 @@
 | N-005 認証・権限の本番化 | [#4](https://github.com/weimaraner69-crypto/test02/issues/4) | 3-Hardening | Feature |
 | N-006 データ永続化 | [#5](https://github.com/weimaraner69-crypto/test02/issues/5) | 3-Hardening | Feature |
 | N-007 子供向け学習機能の実装 | [#6](https://github.com/weimaraner69-crypto/test02/issues/6) | 4-Advanced | Feature |
+| N-008 FR-020 拡充（理科・社会・英語カタログ） | [#11](https://github.com/weimaraner69-crypto/test02/issues/11) | 4-Advanced | Feature |
+| N-009 observability 統合 | [#12](https://github.com/weimaraner69-crypto/test02/issues/12) | 4-Advanced | Feature |
+| N-010 NFR-030 CLI/runbook 整備 | [#13](https://github.com/weimaraner69-crypto/test02/issues/13) | 4-Advanced | Feature |
+| B-002 Google OAuth 本実装 | [#14](https://github.com/weimaraner69-crypto/test02/issues/14) | 5-Future | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-02: N-008〜N-010 Next 追加、B-002 Backlog 追加（GitHub Issues #11〜#14 作成）
 - 2026-05-02: N-007 完了（子供向け学習機能、PR #10 マージ、178 passed / 97.30%）
 - 2026-05-02: B-001 → N-007 昇格（子供向け学習機能、Phase 4 Advanced 着手）
 - 2026-05-02: N-006 完了（SQLite 永続化、runbook/architecture 更新、140 passed / 97.12%）
