@@ -46,8 +46,11 @@ def test_get_content_for_grade_math_grade3(svc) -> None:
 
 
 def test_get_content_for_grade_unregistered_returns_none(svc) -> None:
-    """カタログ未登録の理科・1 年は None を返す。"""
-    assert svc.get_content_for_grade(1, Subject.SCIENCE) is None
+    """カタログ未登録の学年 7（全科目で存在しない）は None を返す。
+    N-008 で理科・社会・英語 各6学年がカタログ追加済みのため、
+    未登録の検証には範囲外の grade=7 を使用する。
+    """
+    assert svc.get_content_for_grade(7, Subject.MATH) is None
 
 
 # ─────────────────────────────────────────────

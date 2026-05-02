@@ -167,10 +167,6 @@
 - 依存：N-006
 - 触る領域：`src/learning/`, `src/domain/`, `src/app.py`, `tests/`
 
-## Backlog（保留）
-
-（B-002 参照）
-
 ## GitHub Issue / Project 対応表
 
 | 計画 | Issue | Phase | 種別 |

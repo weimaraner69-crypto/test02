@@ -65,8 +65,8 @@ def test_get_content_math_grade3_returns_content() -> None:
 # get_content: 未登録エントリは None
 # ─────────────────────────────────────────────
 def test_get_content_unregistered_returns_none() -> None:
-    """理科・1 年はカタログ未登録なので None を返す。"""
-    assert get_content(Subject.SCIENCE, 1) is None
+    """存在しない学年（7 年生）はカタログ未登録なので None を返す。"""
+    assert get_content(Subject.MATH, 7) is None
 
 
 # ─────────────────────────────────────────────
@@ -98,3 +98,30 @@ def test_learning_content_fields_are_nonempty() -> None:
 def test_subject_enum_value_is_japanese(subject: Subject, expected_value: str) -> None:
     """Subject の value がすべて日本語文字列である。"""
     assert subject.value == expected_value
+
+
+# ─────────────────────────────────────────────
+# CONTENT_CATALOG: 理科 6 学年すべて存在する
+# ─────────────────────────────────────────────
+@pytest.mark.parametrize("grade", range(1, 7))
+def test_content_catalog_science_all_grades(grade: int) -> None:
+    """CONTENT_CATALOG に (Subject.SCIENCE, 1)〜(Subject.SCIENCE, 6) がある。"""
+    assert (Subject.SCIENCE, grade) in CONTENT_CATALOG
+
+
+# ─────────────────────────────────────────────
+# CONTENT_CATALOG: 社会 6 学年すべて存在する
+# ─────────────────────────────────────────────
+@pytest.mark.parametrize("grade", range(1, 7))
+def test_content_catalog_social_all_grades(grade: int) -> None:
+    """CONTENT_CATALOG に (Subject.SOCIAL, 1)〜(Subject.SOCIAL, 6) がある。"""
+    assert (Subject.SOCIAL, grade) in CONTENT_CATALOG
+
+
+# ─────────────────────────────────────────────
+# CONTENT_CATALOG: 英語 6 学年すべて存在する
+# ─────────────────────────────────────────────
+@pytest.mark.parametrize("grade", range(1, 7))
+def test_content_catalog_english_all_grades(grade: int) -> None:
+    """CONTENT_CATALOG に (Subject.ENGLISH, 1)〜(Subject.ENGLISH, 6) がある。"""
+    assert (Subject.ENGLISH, grade) in CONTENT_CATALOG
