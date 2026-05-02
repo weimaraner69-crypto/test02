@@ -69,7 +69,24 @@
   - ファイルベース DB を再オープンした後もプロファイルが取得できることを検証する
 - 担当モジュール：`src/user/`、`src/app.py`、`docs/runbook.md`
 
-<!-- 必要に応じて FR-020, FR-030 ... を追加 -->
+### FR-020 学年別学習機能
+
+- 入力：Grade（1〜6）、Subject（算数・国語・理科・社会・英語）、topic 文字列
+- 出力：
+  - 学年・科目に対応する LearningContent（タイトル・説明・サンプルトピック）
+  - Gemini 生成問題（question/answer/hints/curriculum_reference）
+  - 回答記録（正誤・日時）
+  - 科目別進捗サマリー（正答率・総問題数・正解数）
+- 動作：
+  - `LearningService` が `UserProfileService`（永続化）と `GeminiService`（問題生成）を統合する
+  - 回答記録は SQLite に保存し、進捗サマリーは集計して返す
+  - コンテンツカタログは `CONTENT_CATALOG` に静的定義する（算数・国語 各 6 学年）
+- 失敗時：
+  - Gemini が None を返した場合 → `ValidationError` を送出
+  - 進捗保存失敗 → `ValidationError` を送出
+- 担当モジュール：`src/learning/`, `src/domain/learning.py`
+
+<!-- 必要に応じて FR-030 ... を追加 -->
 
 ## 非機能要件（NFR）
 

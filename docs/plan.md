@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Hardening**（N-001〜N-006 完了、次タスク選定待ち）
+- フェーズ：**Advanced**（N-001〜N-006 完了、B-001 着手中）
 - ブロッカー：なし
-- 直近の重要決定：N-006 完了・SQLite 永続化と移行手順を整備（2026-05-02）
+- 直近の重要決定：B-001 昇格・子供向け学習機能実装を開始（2026-05-02）
 
 ## ロードマップ（概略）
 
@@ -104,9 +104,23 @@
 - 依存：N-005
 - 触る領域：`src/`, `tests/`, `docs/runbook.md`
 
+### N-007 子供向け学習機能の実装
+
+- **🚧 進行中（2026-05-02〜）**
+- 目的：学年別コンテンツ配信・問題生成・進捗管理を実装し、子供が学年に合った問題を解ける機能を提供する
+- 受入条件：
+  - [ ] `Grade`（1〜6）と `Subject` による学年別コンテンツ取得ができる
+  - [ ] Gemini 連携で問題生成（`LearningService.generate_question`）が動作する
+  - [ ] 回答記録（正誤）を SQLite に保存・取得できる
+  - [ ] 進捗サマリー（科目別正答率）を取得できる
+  - [ ] メインパイプライン（`src/app.py`）に学習機能が統合されている
+  - [ ] テストが追加され CI が通過する
+- 依存：N-006
+- 触る領域：`src/learning/`, `src/domain/`, `src/app.py`, `tests/`
+
 ## Backlog（保留）
 
-- B-001 子供向け学習機能の実装（学年別コンテンツ配信・問題生成・進捗管理）
+（なし）
 
 ## GitHub Issue / Project 対応表
 
@@ -115,10 +129,11 @@
 | N-004 設定管理・エラーハンドリング強化 | [#3](https://github.com/weimaraner69-crypto/test02/issues/3) | 3-Hardening | Feature |
 | N-005 認証・権限の本番化 | [#4](https://github.com/weimaraner69-crypto/test02/issues/4) | 3-Hardening | Feature |
 | N-006 データ永続化 | [#5](https://github.com/weimaraner69-crypto/test02/issues/5) | 3-Hardening | Feature |
-| B-001 子供向け学習機能の実装 | [#6](https://github.com/weimaraner69-crypto/test02/issues/6) | 4-Advanced | Feature |
+| N-007 子供向け学習機能の実装 | [#6](https://github.com/weimaraner69-crypto/test02/issues/6) | 4-Advanced | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-02: B-001 → N-007 昇格（子供向け学習機能、Phase 4 Advanced 着手）
 - 2026-05-02: N-006 完了（SQLite 永続化、runbook/architecture 更新、140 passed / 97.12%）
 - 2026-05-02: N-005 完了（認証モード切り替え、RBAC、PR #8 マージ、128 passed / 96.83%）
 - 2026-05-02: N-004 完了（AppConfig 設定管理・エラーハンドリング強化、PR #7 マージ、117 passed / 98.50%）
