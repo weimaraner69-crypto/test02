@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-007 完了）
+- フェーズ：**Advanced**（N-001〜N-010 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-008〜N-010 計画追加（FR-020拡充・observability・CLI/runbook 2026-05-02）
+- 直近の重要決定：N-008〜N-010 実装完了・マージ（2026-05-03）
 
 ## ロードマップ（概略）
 
@@ -34,38 +34,38 @@
 
 ### N-008 FR-020 拡充（理科・社会・英語カタログ追加）
 
-- **⏳ 未着手**
+- **✅ 完了（2026-05-03）**
 - 目的：`CONTENT_CATALOG` に理科・社会・英語の各6学年コンテンツを追加し、FR-020 を完成させる
 - 受入条件：
-  - [ ] Subject.SCIENCE / SOCIAL / ENGLISH × 学年1〜6（計18エントリ）を追加
-  - [ ] `get_content()` で全科目・全学年が取得できる
-  - [ ] テストで全エントリを検証する
-  - [ ] CI 通過（ruff/mypy/pytest/coverage 80%+）
+  - [x] Subject.SCIENCE / SOCIAL / ENGLISH × 学年1〜6（計18エントリ）を追加
+  - [x] `get_content()` で全科目・全学年が取得できる
+  - [x] テストで全エントリを検証する
+  - [x] CI 通過（ruff/mypy/pytest/coverage 80%+）
 - 依存：N-007
 - 触る領域：`src/domain/learning.py`、`tests/test_domain_learning.py`
 
 ### N-009 observability 統合（OpenTelemetry + トレーシング）
 
-- **⏳ 未着手**
+- **✅ 完了（2026-05-03）**
 - 目的：既存の `src/observability/tracing.py` をメインパイプラインに統合し、分散トレーシングを有効化する
 - 受入条件：
-  - [ ] `src/app.py` に OpenTelemetry トレーシングを統合する
-  - [ ] 主要サービス（auth/gemini/learning）にスパンを追加する
-  - [ ] observability が無効時（OTel 未設定）でも安全に動作する（フェイルクローズ）
-  - [ ] テストで統合を検証する
-  - [ ] CI 通過
+  - [x] `src/app.py` に OpenTelemetry トレーシングを統合する
+  - [x] 主要サービス（auth/gemini/learning）にスパンを追加する
+  - [x] observability が無効時（OTel 未設定）でも安全に動作する（フェイルクローズ）
+  - [x] テストで統合を検証する
+  - [x] CI 通過
 - 依存：N-008
 - 触る領域：`src/observability/`、`src/app.py`、`tests/`
 
 ### N-010 NFR-030 CLI/runbook 整備（1コマンド実行・Docker 対応）
 
-- **⏳ 未着手**
+- **✅ 完了（2026-05-03）**
 - 目的：1コマンドでパイプラインを実行できる CLI エントリポイントと Docker 環境を整備する
 - 受入条件：
-  - [ ] Makefile または run スクリプトで1コマンド実行できる
-  - [ ] Dockerfile を作成し `docker build` / `docker run` が成功する
-  - [ ] `docs/runbook.md` にローカル実行・Docker 実行手順を追記する
-  - [ ] CI 通過
+  - [x] Makefile または run スクリプトで1コマンド実行できる
+  - [x] Dockerfile を作成し `docker build` / `docker run` が成功する
+  - [x] `docs/runbook.md` にローカル実行・Docker 実行手順を追記する
+  - [x] CI 通過
 - 依存：N-009
 - 触る領域：`Makefile`（新規）、`Dockerfile`（新規）、`docs/runbook.md`
 
