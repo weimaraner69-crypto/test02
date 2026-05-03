@@ -34,8 +34,10 @@ class AppConfig:
     drive_folder_id: str = field(default="folder1")
     gemini_topic: str = field(default="算数")
     gemini_grade: int = field(default=3)
-    # 認証モード: mock（テスト用固定ユーザー）/ google（将来の Google OAuth 対応）
+    # 認証モード: mock（テスト用固定ユーザー）/ google（Google OAuth 対応）
     auth_mode: str = field(default="mock")
+    google_client_id: str = field(default="", repr=False)
+    google_client_secret: str = field(default="", repr=False)
 
     @classmethod
     def from_env(cls) -> AppConfig:
@@ -84,4 +86,6 @@ class AppConfig:
             gemini_topic=os.environ.get("GEMINI_TOPIC", "算数"),
             gemini_grade=grade,
             auth_mode=auth_mode_raw,
+            google_client_id=os.environ.get("GOOGLE_CLIENT_ID", ""),
+            google_client_secret=os.environ.get("GOOGLE_CLIENT_SECRET", ""),
         )

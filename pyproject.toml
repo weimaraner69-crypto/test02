@@ -3,7 +3,9 @@ name = "mirastudy"
 version = "0.1.0"
 description = "子供向け学習支援アプリ MiraStudy v2.0 バックエンド"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "google-auth-oauthlib>=1.2.0",
+]
 
 [project.optional-dependencies]
 testing = [
