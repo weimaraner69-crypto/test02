@@ -46,6 +46,16 @@ class UserProfileService:
                 )
                 """
             )
+            self._connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS family_members (
+                    admin_uid TEXT NOT NULL,
+                    member_uid TEXT NOT NULL,
+                    member_profile_json TEXT NOT NULL,
+                    PRIMARY KEY (admin_uid, member_uid)
+                )
+                """
+            )
 
     def close(self) -> None:
         """DB 接続をクローズする。呼び出し側が明示的に管理する。"""
@@ -122,13 +132,52 @@ class UserProfileService:
                 continue
         return result
 
+    def add_family_member(self, admin_uid: str, member_uid: str, member_profile: dict) -> bool:
+        """家族メンバーを追加する。自分自身（admin_uid == member_uid）は登録不可。"""
+        # 自己参照は許可しない
+        if admin_uid == member_uid:
+            raise ValidationError("自分自身を家族メンバーに追加することはできません")
+        with self._connection:
+            self._connection.execute(
+                """
+                INSERT INTO family_members (admin_uid, member_uid, member_profile_json)
+                VALUES (?, ?, ?)
+                ON CONFLICT(admin_uid, member_uid)
+                DO UPDATE SET member_profile_json = excluded.member_profile_json
+                """,
+                (admin_uid, member_uid, json.dumps(member_profile, ensure_ascii=False)),
+            )
+        return True
+
+    def remove_family_member(self, admin_uid: str, member_uid: str) -> bool:
+        """家族メンバーを削除する。削除できた場合は True、存在しなかった場合は False を返す。"""
+        with self._connection:
+            cursor = self._connection.execute(
+                "DELETE FROM family_members WHERE admin_uid = ? AND member_uid = ?",
+                (admin_uid, member_uid),
+            )
+        # rowcount が 1 以上なら実際に削除された
+        return cursor.rowcount > 0
+
+    def get_family_members(self, admin_uid: str) -> list[dict]:
+        """指定した管理者ユーザーの家族メンバー一覧を返す。件数 0 の場合は空リストを返す。"""
+        rows = self._connection.execute(
+            "SELECT member_profile_json FROM family_members WHERE admin_uid = ?",
+            (admin_uid,),
+        ).fetchall()
+        result: list[dict] = []
+        for (member_profile_json,) in rows:
+            try:
+                result.append(self._deserialize_payload(member_profile_json))
+            except Exception:
+                continue
+        return result
+
     def list_family_members(self, admin_uid: str) -> list:
         """
-        管理者の家族メンバー一覧取得（雛形）
+        管理者の家族メンバー一覧取得（後方互換用ラッパー）
         """
-        # 実際はprofile['familyMembers']参照
-        admin = self.get_profile(admin_uid)
-        return admin.get("familyMembers", []) if admin else []
+        return self.get_family_members(admin_uid)
 
     def __del__(self) -> None:
         with suppress(Exception):
