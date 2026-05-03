@@ -51,6 +51,24 @@ cp .env.example .env
 
 ## 代表コマンド
 
+### ローカル開発コマンド（make 推奨）
+
+```bash
+# セットアップ
+make setup
+
+# テスト実行（カバレッジ付き）
+make test
+
+# ローカル CI 全ステップ（lint/format/typecheck/test）
+make ci
+
+# 個別コマンド
+make lint         # リンター
+make format       # フォーマットチェック
+make typecheck    # 型チェック
+```
+
 ### 静的解析
 
 ```bash
@@ -74,16 +92,44 @@ Copilot エージェントの場合は `get_errors` ツール（filePaths 省略
 
 ```bash
 # 全テスト実行
-.venv/bin/python -m pytest -q --tb=short --cov=src --cov-report=term-missing
+make test
+
+# または直接実行
+uv run pytest -q --tb=short --cov=src --cov-report=term-missing
 ```
 
-### ローカル実行
+### ローカル実行（CLI）
 
 ```bash
-.venv/bin/python -m src.app
+# 方法1: make コマンド
+make run
+
+# 方法2: uv 直接実行
+uv run python -m src.app
 ```
 
-初回実行時に `DATABASE_PATH` で指定した SQLite ファイルと必要テーブルを自動生成する。
+初回実行時に `DATABASE_PATH` で指定した SQLite ファイルと必要テーブルを自動生成する.
+
+### Docker での実行
+
+```bash
+# ステップ1: Docker イメージをビルド
+make docker-build
+
+# ステップ2: Docker コンテナを実行
+make docker-run
+```
+
+または手動で:
+
+```bash
+docker build -t mirastudy:latest .
+docker run --rm --env-file .env -v "$(pwd)/data:/app/data" mirastudy:latest
+```
+
+**注意:**
+- `.env` が存在することを確認してから実行してください（ない場合は `cp .env.example .env` で作成）
+- `data/` ディレクトリはホストマシンの同名ディレクトリにマウントされます（永続化のため）
 
 ### SQLite の確認
 
@@ -97,7 +143,7 @@ sqlite3 data/mirastudy.db "SELECT count(*) FROM learning_progress;"
 
 ```bash
 # 禁止操作・秘密情報検出
-.venv/bin/python ci/policy_check.py
+uv run python ci/policy_check.py
 ```
 
 ## 生成物の扱い
