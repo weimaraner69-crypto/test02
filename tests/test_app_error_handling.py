@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 if TYPE_CHECKING:
     import pytest
 
-from src.app import main
+from src.app import _setup_logging, main
 from src.core.exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -119,3 +120,33 @@ def test_main_raises_authorization_error_when_profile_missing(
         mock_profile_service.return_value.get_profile.return_value = None
         with _pytest.raises(AuthorizationError):
             main()
+
+
+# ---- N-014: _setup_logging 専用テスト ----
+
+
+def test_setup_logging_valid_level() -> None:
+    """有効なレベル文字列を渡すと basicConfig が正しいレベルで呼ばれる。"""
+    with patch("logging.basicConfig") as mock_basicconfig:
+        _setup_logging("DEBUG")
+    mock_basicconfig.assert_called_once()
+    _, kwargs = mock_basicconfig.call_args
+    assert kwargs["level"] == logging.DEBUG
+
+
+def test_setup_logging_invalid_level_falls_back_to_info() -> None:
+    """無効なレベル文字列を渡すと basicConfig が INFO で呼ばれる（フォールバック）。"""
+    with patch("logging.basicConfig") as mock_basicconfig:
+        _setup_logging("INVALID_LEVEL_XYZ")
+    mock_basicconfig.assert_called_once()
+    _, kwargs = mock_basicconfig.call_args
+    assert kwargs["level"] == logging.INFO
+
+
+def test_setup_logging_case_insensitive() -> None:
+    """レベル文字列は大文字小文字を区別しない。"""
+    with patch("logging.basicConfig") as mock_basicconfig:
+        _setup_logging("warning")
+    mock_basicconfig.assert_called_once()
+    _, kwargs = mock_basicconfig.call_args
+    assert kwargs["level"] == logging.WARNING

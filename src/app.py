@@ -40,20 +40,20 @@ def main() -> None:
     _setup_logging(config.log_level)
     profile_service: UserProfileService | None = None
 
-    print("=== MiraStudy CLI ===")
+    logger.info("=== MiraStudy CLI ===")
     try:
         # AUTH_MODE に応じた認証サービスを初期化する
         auth = AuthService(mode=config.auth_mode)
         user = auth.sign_in_with_google()
         if user is None:
             raise AuthenticationError("サインインに失敗しました")
-        print("ログイン成功")
+        logger.info("ログイン成功")
 
         # プロファイル管理
         profile_service = UserProfileService(db_path=config.database_path)
         profile_service.set_profile(user["uid"], user)
         profile = profile_service.get_profile(user["uid"])
-        print("プロファイルを保存しました")
+        logger.info("プロファイルを保存しました")
 
         # 権限判定: VIEW_KNOWLEDGE がなければ処理を停止する
         # profile が None は異常状態（フェイルクローズ P-010）
@@ -62,52 +62,34 @@ def main() -> None:
         role = profile.get("role", "student")
         if not has_permission(role, Permission.VIEW_KNOWLEDGE):
             raise AuthorizationError(f"ロール '{role}' は VIEW_KNOWLEDGE 権限を持っていません")
-        print("知識共有フォルダ閲覧権限あり")
+        logger.info("知識共有フォルダ閲覧権限あり")
 
         # Drive連携
         drive = DriveService()
         pdfs = drive.list_pdfs_in_folder(config.drive_folder_id)
-        print(f"PDF一覧: {pdfs}")
+        logger.info("PDF一覧: %s", pdfs)
         meta = drive.get_metadata(config.drive_folder_id, config.gemini_topic)
-        print(f"metadata: {meta}")
+        logger.info("metadata: %s", meta)
 
-        # Gemini API連携
+        # GeminiService 初期化（LearningService に注入する）
         gemini = GeminiService(api_key=config.api_key)
-        question = gemini.generate_question(
-            "PDFコンテキスト", config.gemini_topic, config.gemini_grade
-        )
-        if question is None:
-            raise ValidationError("Gemini から問題を取得できませんでした")
-        print(f"Gemini生成問題: {question}")
 
-        progress = {
-            "topic": config.gemini_topic,
-            "grade": config.gemini_grade,
-            "status": "generated",
-            "lastQuestion": question["question"]["text"],
-        }
-        profile_service.set_learning_progress(user["uid"], config.gemini_topic, progress)
-        saved_progress = profile_service.get_learning_progress(user["uid"], config.gemini_topic)
-        if saved_progress is None:
-            raise ValidationError("学習進捗を再取得できませんでした")
-        print("学習進捗を保存しました")
-
-        # 学習機能: 学年別コンテンツ配信・問題生成
+        # 学習機能: 学年別コンテンツ配信・問題生成（LearningService 経由で実施）
         learning = LearningService(
             profile_service=profile_service,
             gemini_service=gemini,
         )
         content = learning.get_content_for_grade(config.gemini_grade, Subject.MATH)
         if content is not None:
-            print(f"学年コンテンツ: {content.title}")
+            logger.info("学年コンテンツ: %s", content.title)
 
         topic_key = config.gemini_topic
         learning.generate_question(user["uid"], config.gemini_grade, Subject.MATH, topic_key)
-        print("学習問題を生成しました")
+        logger.info("学習問題を生成しました")
 
         learning.record_answer(user["uid"], Subject.MATH, topic_key, is_correct=True)
         summary = learning.get_progress_summary(user["uid"], Subject.MATH)
-        print(f"進捗サマリー: {summary}")
+        logger.info("進捗サマリー: %s", summary)
 
     except AuthenticationError as e:
         logger.error("認証エラー: %s", e)
