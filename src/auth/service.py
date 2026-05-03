@@ -8,6 +8,8 @@ from __future__ import annotations
 import logging
 from enum import Enum
 
+from src.observability.tracing import trace_agent_operation
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,6 +30,7 @@ class AuthService:
                 "現在は sign_in_with_google() を呼び出すと NotImplementedError が発生します。"
             )
 
+    @trace_agent_operation("auth.sign_in")
     def sign_in_with_google(self) -> dict | None:
         """
         Googleアカウントでログインする。

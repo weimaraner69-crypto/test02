@@ -18,6 +18,7 @@ from src.domain.learning import Subject
 from src.drive.service import DriveService
 from src.gemini.service import GeminiService
 from src.learning.service import LearningService
+from src.observability.tracing import init_tracer
 from src.permissions.roles import Permission, has_permission
 from src.user.profile import UserProfileService
 
@@ -34,6 +35,7 @@ def _setup_logging(level: str) -> None:
 
 def main() -> None:
     """メインパイプライン。設定ロード → 認証 → プロファイル → 権限判定 → Drive → Gemini。"""
+    init_tracer()
     config = AppConfig.from_env()
     _setup_logging(config.log_level)
     profile_service: UserProfileService | None = None
