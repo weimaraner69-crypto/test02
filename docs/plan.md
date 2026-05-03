@@ -32,56 +32,22 @@
 
 ## Next（自動実行対象：最大3件）
 
-### N-008 FR-020 拡充（理科・社会・英語カタログ追加）
+### N-011 Google OAuth 本実装（B-002 昇格）
 
-- **✅ 完了（2026-05-03）**
-- 目的：`CONTENT_CATALOG` に理科・社会・英語の各6学年コンテンツを追加し、FR-020 を完成させる
+- **⏳ 未着手**
+- 目的：`AuthMode.GOOGLE` プレースホルダーを Google OAuth 2.0 で本実装し、本番環境での認証フローを完成させる
 - 受入条件：
-  - [x] Subject.SCIENCE / SOCIAL / ENGLISH × 学年1〜6（計18エントリ）を追加
-  - [x] `get_content()` で全科目・全学年が取得できる
-  - [x] テストで全エントリを検証する
-  - [x] CI 通過（ruff/mypy/pytest/coverage 80%+）
-- 依存：N-007
-- 触る領域：`src/domain/learning.py`、`tests/test_domain_learning.py`
-
-### N-009 observability 統合（OpenTelemetry + トレーシング）
-
-- **✅ 完了（2026-05-03）**
-- 目的：既存の `src/observability/tracing.py` をメインパイプラインに統合し、分散トレーシングを有効化する
-- 受入条件：
-  - [x] `src/app.py` に OpenTelemetry トレーシングを統合する
-  - [x] 主要サービス（auth/gemini/learning）にスパンを追加する
-  - [x] observability が無効時（OTel 未設定）でも安全に動作する（フェイルクローズ）
-  - [x] テストで統合を検証する
-  - [x] CI 通過
-- 依存：N-008
-- 触る領域：`src/observability/`、`src/app.py`、`tests/`
-
-### N-010 NFR-030 CLI/runbook 整備（1コマンド実行・Docker 対応）
-
-- **✅ 完了（2026-05-03）**
-- 目的：1コマンドでパイプラインを実行できる CLI エントリポイントと Docker 環境を整備する
-- 受入条件：
-  - [x] Makefile または run スクリプトで1コマンド実行できる
-  - [x] Dockerfile を作成し `docker build` / `docker run` が成功する
-  - [x] `docs/runbook.md` にローカル実行・Docker 実行手順を追記する
-  - [x] CI 通過
-- 依存：N-009
-- 触る領域：`Makefile`（新規）、`Dockerfile`（新規）、`docs/runbook.md`
+  - [ ] Google OAuth 2.0 フロー実装（google-auth-oauthlib 利用）
+  - [ ] 環境変数 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET 設定
+  - [ ] ローカル開発用リダイレクト URL（http://localhost:8080/auth/callback）対応
+  - [ ] テストでモック OAuth を検証する
+  - [ ] CI 通過（pytest/mypy/ruff）
+  - [ ] `.env.example` に Google OAuth 設定例を追記
+  - [ ] `docs/runbook.md` に本番デプロイ用 Google Cloud Console 設定手順を記載
+- 依存：N-010
+- 触る領域：`src/auth/`、`src/core/config.py`、`.env.example`、`tests/`、`docs/runbook.md`
 
 ## Backlog（保留）
-
-### B-002 Google OAuth 本実装
-
-- **⏳ 計画のみ（実装は将来フェーズ）**
-- 目的：`src/auth/service.py` の `AuthMode.GOOGLE` プレースホルダーを Google OAuth 2.0 で本実装する
-- 受入条件：
-  - [ ] Google OAuth 2.0 フローの実装
-  - [ ] 環境変数（GOOGLE_CLIENT_ID/SECRET）による設定
-  - [ ] テストでモック OAuth を検証
-  - [ ] CI 通過
-- 依存：N-010
-- 触る領域：`src/auth/`、`tests/`
 
 - **✅ 完了（2026-04-30）**
 - 目的：CI（lint/type/test/policy_check）を安定稼働させ、最低限の品質を自動判定できるようにする
@@ -169,16 +135,16 @@
 
 ## GitHub Issue / Project 対応表
 
-| 計画 | Issue | Phase | 種別 |
-| --- | --- | --- | --- |
-| N-004 設定管理・エラーハンドリング強化 | [#3](https://github.com/weimaraner69-crypto/test02/issues/3) | 3-Hardening | Feature |
-| N-005 認証・権限の本番化 | [#4](https://github.com/weimaraner69-crypto/test02/issues/4) | 3-Hardening | Feature |
-| N-006 データ永続化 | [#5](https://github.com/weimaraner69-crypto/test02/issues/5) | 3-Hardening | Feature |
-| N-007 子供向け学習機能の実装 | [#6](https://github.com/weimaraner69-crypto/test02/issues/6) | 4-Advanced | Feature |
-| N-008 FR-020 拡充（理科・社会・英語カタログ） | [#11](https://github.com/weimaraner69-crypto/test02/issues/11) | 4-Advanced | Feature |
-| N-009 observability 統合 | [#12](https://github.com/weimaraner69-crypto/test02/issues/12) | 4-Advanced | Feature |
-| N-010 NFR-030 CLI/runbook 整備 | [#13](https://github.com/weimaraner69-crypto/test02/issues/13) | 4-Advanced | Feature |
-| B-002 Google OAuth 本実装 | [#14](https://github.com/weimaraner69-crypto/test02/issues/14) | 5-Future | Feature |
+| 計画 | Issue | Phase | ステータス | 種別 |
+| --- | --- | --- | --- | --- |
+| N-004 設定管理・エラーハンドリング強化 | [#3](https://github.com/weimaraner69-crypto/test02/issues/3) | 3-Hardening | ✅ 完了 | Feature |
+| N-005 認証・権限の本番化 | [#4](https://github.com/weimaraner69-crypto/test02/issues/4) | 3-Hardening | ✅ 完了 | Feature |
+| N-006 データ永続化 | [#5](https://github.com/weimaraner69-crypto/test02/issues/5) | 3-Hardening | ✅ 完了 | Feature |
+| N-007 子供向け学習機能の実装 | [#6](https://github.com/weimaraner69-crypto/test02/issues/6) | 4-Advanced | ✅ 完了 | Feature |
+| N-008 FR-020 拡充（理科・社会・英語カタログ） | [#11](https://github.com/weimaraner69-crypto/test02/issues/11) | 4-Advanced | ✅ 完了 | Feature |
+| N-009 observability 統合 | [#12](https://github.com/weimaraner69-crypto/test02/issues/12) | 4-Advanced | ✅ 完了 | Feature |
+| N-010 NFR-030 CLI/runbook 整備 | [#13](https://github.com/weimaraner69-crypto/test02/issues/13) | 4-Advanced | ✅ 完了 | Feature |
+| N-011 Google OAuth 本実装 | [#14](https://github.com/weimaraner69-crypto/test02/issues/14) | 5-Future | ⏳ 着手予定 | Feature |
 
 ## 直近の変更履歴（最大10件）
 
