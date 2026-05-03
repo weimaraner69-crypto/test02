@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from src.core.exceptions import ValidationError
-from src.domain.learning import LearningContent, Subject, get_content
+from src.domain.learning import LearningContent, Subject, get_content, validate_grade
 from src.observability.tracing import trace_llm_call
 
 if TYPE_CHECKING:
@@ -41,6 +41,11 @@ class LearningService:
         """Gemini で問題を生成して返す。
         生成結果が None の場合は ValidationError を送出する。
         """
+        # 学年バリデーション（1〜6 の整数以外は ValidationError）
+        validate_grade(grade)
+        # subject バリデーション
+        if not isinstance(subject, Subject):
+            raise ValidationError(f"subject は Subject 型で指定してください: {subject!r}")
         result = self._gemini.generate_question(
             context=f"{subject.value} {topic}",
             topic=topic,
@@ -59,6 +64,9 @@ class LearningService:
         ない場合は新規エントリを作成する。
         保存失敗（False 返却）時は ValidationError を送出する。
         """
+        # subject バリデーション
+        if not isinstance(subject, Subject):
+            raise ValidationError(f"subject は Subject 型で指定してください: {subject!r}")
         key = _topic_key(subject, topic)
         existing = self._profile.get_learning_progress(uid, key)
 
@@ -88,6 +96,9 @@ class LearningService:
         """科目全体の進捗サマリーを返す。
         対象科目のすべての topic を取得し、正答率・総問題数・正解数を集計する。
         """
+        # subject バリデーション
+        if not isinstance(subject, Subject):
+            raise ValidationError(f"subject は Subject 型で指定してください: {subject!r}")
         total = 0
         correct = 0
 
