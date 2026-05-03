@@ -99,6 +99,10 @@ URL_ALLOWLIST_PATTERNS: list[str] = [
     r"json-schema\.org",
     r"astral\.sh",
     r"opentelemetry\.io",
+    r"accounts\.google\.com",  # N-011: Google OAuth エンドポイント
+    r"oauth2\.googleapis\.com",  # N-011: Google OAuth トークンエンドポイント
+    r"googleapis\.com",  # N-011: Google API (Sheets, Drive, Userinfo など)
+    r"localhost",  # ローカル開発用（OAuth callback, テスト用）
 ]
 
 # 禁止操作パターン（言語非依存、全ファイルに適用）
