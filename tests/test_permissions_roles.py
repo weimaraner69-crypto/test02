@@ -66,3 +66,9 @@ def test_unknown_role_has_no_permissions() -> None:
     """存在しないロールはいかなる権限も持たない。"""
     for perm in Permission:
         assert not has_permission("unknown_role", perm), f"未知ロールが {perm} を持っている"
+
+
+def test_non_string_role_returns_false() -> None:
+    """user_role が str 以外の場合は False を返す（型ガード）。"""
+    assert not has_permission(None, Permission.VIEW_KNOWLEDGE)  # type: ignore[arg-type]
+    assert not has_permission(123, Permission.VIEW_KNOWLEDGE)  # type: ignore[arg-type]
