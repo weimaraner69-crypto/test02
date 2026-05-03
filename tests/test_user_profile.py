@@ -30,15 +30,51 @@ def test_set_and_get_profile(profile_service: UserProfileService) -> None:
 
 
 def test_list_family_members(profile_service: UserProfileService) -> None:
+    # add_family_member で追加したメンバーが list_family_members で取得できること
     admin_uid = "admin1"
-    admin_profile = {
-        "displayName": "管理者",
-        "role": "admin",
-        "familyMembers": ["user1", "user2"],
-    }
-    profile_service.set_profile(admin_uid, admin_profile)
+    m1 = {"displayName": "子供1", "role": "student"}
+    m2 = {"displayName": "子供2", "role": "student"}
+    profile_service.add_family_member(admin_uid, "user1", m1)
+    profile_service.add_family_member(admin_uid, "user2", m2)
     members = profile_service.list_family_members(admin_uid)
-    assert members == ["user1", "user2"]
+    assert len(members) == 2
+    assert m1 in members
+    assert m2 in members
+
+
+def test_add_family_member_self_raises(profile_service: UserProfileService) -> None:
+    # 自分自身を追加しようとすると ValidationError が発生すること
+    with pytest.raises(ValidationError):
+        profile_service.add_family_member("admin1", "admin1", {"displayName": "自分"})
+
+
+def test_remove_family_member_returns_true(profile_service: UserProfileService) -> None:
+    # 存在するメンバーを削除すると True を返すこと
+    profile_service.add_family_member("admin1", "user1", {"displayName": "子供1"})
+    result = profile_service.remove_family_member("admin1", "user1")
+    assert result is True
+    assert profile_service.get_family_members("admin1") == []
+
+
+def test_remove_family_member_returns_false_when_not_exists(
+    profile_service: UserProfileService,
+) -> None:
+    # 存在しないメンバーを削除すると False を返すこと
+    assert profile_service.remove_family_member("admin1", "nonexistent") is False
+
+
+def test_get_family_members_empty(profile_service: UserProfileService) -> None:
+    # メンバーが存在しない場合は空リストを返すこと
+    assert profile_service.get_family_members("admin1") == []
+
+
+def test_add_family_member_upsert(profile_service: UserProfileService) -> None:
+    # 同じメンバーを再度追加するとプロファイルが上書きされること
+    profile_service.add_family_member("admin1", "user1", {"displayName": "旧名"})
+    profile_service.add_family_member("admin1", "user1", {"displayName": "新名"})
+    members = profile_service.get_family_members("admin1")
+    assert len(members) == 1
+    assert members[0]["displayName"] == "新名"
 
 
 def test_set_and_get_learning_progress(profile_service: UserProfileService) -> None:
