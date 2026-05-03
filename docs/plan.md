@@ -10,7 +10,7 @@
 
 - フェーズ：**Advanced**（N-001〜N-011 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-011 Google OAuth 本実装完了・マージ、N-012 docs lint 整理を Next に昇格（2026-05-04）
+- 直近の重要決定：N-012 docs lint 整理完了、N-013 正本ドキュメント整合性回復を Next に追加（2026-05-04）
 
 ## ロードマップ（概略）
 
@@ -32,7 +32,17 @@
 
 ## Next（自動実行対象：最大3件）
 
-- 現在の Next は空。新規要件または Backlog 追加待ち。
+### N-013 正本ドキュメント整合性回復
+
+- **⏳ 未着手**
+- 目的：Google OAuth 本実装後も残っている `docs/requirements.md` と `docs/architecture.md` の古い記述やプレースホルダーを現実装に合わせて是正する
+- 受入条件：
+  - [ ] `docs/requirements.md` の FR-001 が現在の Google OAuth 2.0 実装に一致している
+  - [ ] `docs/architecture.md` の auth 責務記述が現在の実装に一致している
+  - [ ] 対象範囲のテンプレート由来プレースホルダーが解消されている
+  - [ ] 更新した docs の diagnostics が 0 件である
+- 依存：N-012
+- 触る領域：`docs/requirements.md`、`docs/architecture.md`
 
 ## Backlog（保留）
 
@@ -120,6 +130,68 @@
 - 依存：N-006
 - 触る領域：`src/learning/`, `src/domain/`, `src/app.py`, `tests/`
 
+### N-008 FR-020 拡充（理科・社会・英語カタログ）
+
+- **✅ 完了（2026-05-03）**
+- 目的：学習コンテンツの対象科目を拡張し、理科・社会・英語を含む学年別カタログを整備する
+- 受入条件：
+  - ✅ `Subject` に理科・社会・英語が追加されている
+  - ✅ 5科目 × 6学年のコンテンツカタログが提供されている
+  - ✅ 学年・科目ごとの取得ロジックがテストで検証されている
+  - ✅ CI が通過する（196 passed, カバレッジ 98.98%）
+- 依存：N-007
+- 触る領域：`src/domain/learning.py`、`src/learning/`、`tests/`
+
+### N-009 observability 統合
+
+- **✅ 完了（2026-05-03）**
+- 目的：主要処理にトレースを導入し、OpenTelemetry ベースの observability を整備する
+- 受入条件：
+  - ✅ `src/observability/tracing.py` に tracer 初期化と decorator 群が実装されている
+  - ✅ auth / gemini / learning の主要処理に trace decorator が適用されている
+  - ✅ OpenTelemetry 未導入環境でも no-op で動作する
+  - ✅ テストが追加され CI が通過する（190 passed, カバレッジ 97.36%）
+- 依存：N-008
+- 触る領域：`src/observability/`、`src/auth/service.py`、`src/gemini/service.py`、`src/learning/service.py`、`tests/`
+
+### N-010 NFR-030 CLI/runbook 整備
+
+- **✅ 完了（2026-05-03）**
+- 目的：ローカル実行・検証・Docker 実行の運用性を高めるため、CLI と runbook を整備する
+- 受入条件：
+  - ✅ `Makefile` に setup / run / test / ci / docker 系ターゲットが追加されている
+  - ✅ `Dockerfile` で実行イメージを構築できる
+  - ✅ `docs/runbook.md` に実行・復旧・ロールバック手順が記載されている
+  - ✅ CI が通過する（190 passed, カバレッジ 97.30%）
+- 依存：N-009
+- 触る領域：`Makefile`、`Dockerfile`、`docs/runbook.md`
+
+### N-011 Google OAuth 本実装
+
+- **✅ 完了（2026-05-04）**
+- 目的：`AuthMode.GOOGLE` のプレースホルダーを Google OAuth 2.0 で本実装し、本番環境の認証フローを完成させる
+- 受入条件：
+  - ✅ Google OAuth 2.0 フロー実装（`google-auth-oauthlib` 利用）
+  - ✅ 環境変数 `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` 設定対応
+  - ✅ ローカル開発用リダイレクト URL（`http://localhost:8080/auth/callback`）対応
+  - ✅ テストで Google モードの挙動を検証している
+  - ✅ CI 通過（209 passed, カバレッジ 92.89%）
+  - ✅ `.env.example` に Google OAuth 設定例を追記
+  - ✅ `docs/runbook.md` に Google Cloud Console 設定手順を記載
+- 依存：N-010
+- 触る領域：`src/auth/`、`src/core/config.py`、`.env.example`、`tests/`、`docs/runbook.md`
+
+### N-012 docs Markdown lint 整理
+
+- **✅ 完了（2026-05-04）**
+- 目的：`docs/plan.md` と `docs/runbook.md` に残っていた Markdown lint 警告を解消し、正本文書の保守性を上げる
+- 受入条件：
+  - ✅ `docs/plan.md` の bare URL 警告を解消している
+  - ✅ `docs/runbook.md` の MD032 / MD060 / MD012 を解消している
+  - ✅ `get_errors` で対象ドキュメントの diagnostics が 0 件である
+- 依存：N-011
+- 触る領域：`docs/plan.md`、`docs/runbook.md`
+
 ## GitHub Issue / Project 対応表
 
 | 計画 | Issue | Phase | ステータス | 種別 |
@@ -133,9 +205,11 @@
 | N-010 NFR-030 CLI/runbook 整備 | [#13](https://github.com/weimaraner69-crypto/test02/issues/13) | 4-Advanced | ✅ 完了 | Feature |
 | N-011 Google OAuth 本実装 | [#14](https://github.com/weimaraner69-crypto/test02/issues/14) | 5-Future | ✅ 完了 | Feature |
 | N-012 docs Markdown lint 整理 | [#19](https://github.com/weimaraner69-crypto/test02/issues/19) | 4-Advanced | ✅ 完了 | Maintenance |
+| N-013 正本ドキュメント整合性回復 | [#20](https://github.com/weimaraner69-crypto/test02/issues/20) | 4-Advanced | ⏳ 着手予定 | Maintenance |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-04: N-013 を Next に追加（Issue #20、requirements/architecture の正本整合性回復）
 - 2026-05-04: N-012 完了（docs Markdown lint 整理、`docs/plan.md` / `docs/runbook.md` diagnostics 0件）
 - 2026-05-04: N-011 完了（PR #18 マージ、Google OAuth 本実装、209 passed / 92.89%）、N-012 を Next に昇格
 - 2026-05-02: N-008〜N-010 Next 追加、B-002 Backlog 追加（GitHub Issues #11〜#14 作成）
@@ -146,6 +220,3 @@
 - 2026-05-02: N-004 完了（AppConfig 設定管理・エラーハンドリング強化、PR #7 マージ、117 passed / 98.50%）
 - 2026-04-30: Phase 3 計画追加（N-004〜N-006 策定、B-001 バックログ登録）
 - 2026-04-30: 今月のゴール G1〜G3 記録
-- 2026-04-30: N-003 完了（constraints.py 境界値テスト、pytest --cov CI追加、カバレッジ 99.32%）
-- 2026-04-30: N-002 完了（MVPパイプライン統合テスト、test_main_pipeline.py追加）
-- 2026-04-30: N-001 完了（`pyproject.toml`, `__init__.py`, CI ステップ有効化）
