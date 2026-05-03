@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-010 完了）
+- フェーズ：**Advanced**（N-001〜N-011 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-008〜N-010 実装完了・マージ（2026-05-03）
+- 直近の重要決定：N-011 Google OAuth 本実装完了・マージ、N-012 docs lint 整理を Next に昇格（2026-05-04）
 
 ## ロードマップ（概略）
 
@@ -32,20 +32,7 @@
 
 ## Next（自動実行対象：最大3件）
 
-### N-011 Google OAuth 本実装（B-002 昇格）
-
-- **⏳ 未着手**
-- 目的：`AuthMode.GOOGLE` プレースホルダーを Google OAuth 2.0 で本実装し、本番環境での認証フローを完成させる
-- 受入条件：
-  - [ ] Google OAuth 2.0 フロー実装（google-auth-oauthlib 利用）
-  - [ ] 環境変数 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET 設定
-  - [ ] ローカル開発用リダイレクト URL（http://localhost:8080/auth/callback）対応
-  - [ ] テストでモック OAuth を検証する
-  - [ ] CI 通過（pytest/mypy/ruff）
-  - [ ] `.env.example` に Google OAuth 設定例を追記
-  - [ ] `docs/runbook.md` に本番デプロイ用 Google Cloud Console 設定手順を記載
-- 依存：N-010
-- 触る領域：`src/auth/`、`src/core/config.py`、`.env.example`、`tests/`、`docs/runbook.md`
+- 現在の Next は空。新規要件または Backlog 追加待ち。
 
 ## Backlog（保留）
 
@@ -144,10 +131,13 @@
 | N-008 FR-020 拡充（理科・社会・英語カタログ） | [#11](https://github.com/weimaraner69-crypto/test02/issues/11) | 4-Advanced | ✅ 完了 | Feature |
 | N-009 observability 統合 | [#12](https://github.com/weimaraner69-crypto/test02/issues/12) | 4-Advanced | ✅ 完了 | Feature |
 | N-010 NFR-030 CLI/runbook 整備 | [#13](https://github.com/weimaraner69-crypto/test02/issues/13) | 4-Advanced | ✅ 完了 | Feature |
-| N-011 Google OAuth 本実装 | [#14](https://github.com/weimaraner69-crypto/test02/issues/14) | 5-Future | ⏳ 着手予定 | Feature |
+| N-011 Google OAuth 本実装 | [#14](https://github.com/weimaraner69-crypto/test02/issues/14) | 5-Future | ✅ 完了 | Feature |
+| N-012 docs Markdown lint 整理 | [#19](https://github.com/weimaraner69-crypto/test02/issues/19) | 4-Advanced | ✅ 完了 | Maintenance |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-04: N-012 完了（docs Markdown lint 整理、`docs/plan.md` / `docs/runbook.md` diagnostics 0件）
+- 2026-05-04: N-011 完了（PR #18 マージ、Google OAuth 本実装、209 passed / 92.89%）、N-012 を Next に昇格
 - 2026-05-02: N-008〜N-010 Next 追加、B-002 Backlog 追加（GitHub Issues #11〜#14 作成）
 - 2026-05-02: N-007 完了（子供向け学習機能、PR #10 マージ、178 passed / 97.30%）
 - 2026-05-02: B-001 → N-007 昇格（子供向け学習機能、Phase 4 Advanced 着手）

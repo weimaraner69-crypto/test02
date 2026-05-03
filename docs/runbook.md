@@ -128,6 +128,7 @@ docker run --rm --env-file .env -v "$(pwd)/data:/app/data" mirastudy:latest
 ```
 
 **注意:**
+
 - `.env` が存在することを確認してから実行してください（ない場合は `cp .env.example .env` で作成）
 - `data/` ディレクトリはホストマシンの同名ディレクトリにマウントされます（永続化のため）
 
@@ -392,9 +393,10 @@ docker run --rm \
 ### トラブルシューティング
 
 | 問題 | 原因 | 解決方法 |
-|---|---|---|
+| --- | --- | --- |
 | `ValueError: Google OAuth 認証情報が未設定` | GOOGLE_CLIENT_ID / SECRET が未設定 | 環境変数を確認・設定 |
 | `RuntimeError: ローカル web サーバー起動失敗` | ポート 8080 が使用中 | 別のプロセスを終了するか、ポートを変更 |
 | `ImportError: google-auth-oauthlib が未インストール` | 依存ライブラリ未インストール | `pip install google-auth-oauthlib` |
 | ログイン後に認証エラー | リダイレクト URI が不正 | Google Cloud Console のリダイレクト URI を確認 |
 
+必要に応じて、OAuth 同意画面の公開ステータスとテストユーザー設定も Google Cloud Console 側で確認する。
