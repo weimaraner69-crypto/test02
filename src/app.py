@@ -43,7 +43,7 @@ def main() -> None:
     print("=== MiraStudy CLI ===")
     try:
         # AUTH_MODE に応じた認証サービスを初期化する
-        auth = AuthService(mode=config.auth_mode)
+        auth = AuthService(mode=config.auth_mode, token_path=config.token_path)
         user = auth.sign_in_with_google()
         if user is None:
             raise AuthenticationError("サインインに失敗しました")
