@@ -321,3 +321,80 @@ P-001〜P-003 違反が発覚した場合の即時対応手順。
 6. **再発防止**:
    - `ci/policy_check.py` のパターンに検出漏れがあれば追加する
    - ブランチ保護ルールの見直しを行う
+
+---
+
+## Google OAuth 本番設定（N-011）
+
+本番環境で Google OAuth を有効化するための設定手順です。
+
+### 前提条件
+
+- Google Cloud Project が作成されていること
+- Google OAuth API が有効化されていること
+
+### Google Cloud Console での設定
+
+#### 1. OAuth 2.0 認証情報の作成
+
+1. [Google Cloud Console](https://console.cloud.google.com/) にログイン
+2. ナビゲーションメニュー → 「APIs と サービス」→ 「認証情報」
+3. 「認証情報を作成」→ 「OAuth クライアント ID」
+4. アプリケーションの種類：**ウェブアプリケーション** を選択
+5. リダイレクト URI を設定：
+   - ローカル開発：`http://localhost:8080/auth/callback`
+   - 本番環境：`https://<本番ドメイン>/auth/callback`
+6. 「作成」をクリック
+7. クライアント ID とクライアント シークレットをコピー
+
+#### 2. 環境変数の設定
+
+本番環境に以下の環境変数を設定します：
+
+```bash
+export GOOGLE_CLIENT_ID="<クライアント ID>"
+export GOOGLE_CLIENT_SECRET="<クライアント シークレット>"
+export AUTH_MODE=google
+```
+
+⚠️ **セキュリティ**: シークレット情報は環境変数またはシークレット管理システム（AWS Secrets Manager, Google Secret Manager 等）で管理し、**リポジトリにコミットしない**。
+
+### ローカル開発での テスト
+
+```bash
+# .env にテスト用 認証情報を設定
+cat >> .env << 'DEVENV'
+AUTH_MODE=google
+GOOGLE_CLIENT_ID="<テスト用クライアント ID>"
+GOOGLE_CLIENT_SECRET="<テスト用クライアント シークレット>"
+DEVENV
+
+# アプリを実行
+make run
+
+# ブラウザが自動起動し、Google ログイン画面が表示されます
+# ログイン後、アプリがユーザー情報を取得します
+```
+
+### Docker での本番実行
+
+```bash
+# 環境変数を指定して実行
+docker run --rm \
+  -e GOOGLE_CLIENT_ID="<本番クライアント ID>" \
+  -e GOOGLE_CLIENT_SECRET="<本番クライアント シークレット>" \
+  -e AUTH_MODE=google \
+  -e DATABASE_PATH=/app/data/mirastudy.db \
+  -v /path/to/data:/app/data \
+  mirastudy:latest
+```
+
+### トラブルシューティング
+
+| 問題 | 原因 | 解決方法 |
+|---|---|---|
+| `ValueError: Google OAuth 認証情報が未設定` | GOOGLE_CLIENT_ID / SECRET が未設定 | 環境変数を確認・設定 |
+| `RuntimeError: ローカル web サーバー起動失敗` | ポート 8080 が使用中 | 別のプロセスを終了するか、ポートを変更 |
+| `ImportError: google-auth-oauthlib が未インストール` | 依存ライブラリ未インストール | `pip install google-auth-oauthlib` |
+| ログイン後に認証エラー | リダイレクト URI が不正 | Google Cloud Console のリダイレクト URI を確認 |
+
