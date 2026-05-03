@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from contextlib import suppress
 from pathlib import Path
@@ -14,6 +15,8 @@ from src.core.exceptions import ValidationError
 
 class UserProfileService:
     """SQLite を用いてユーザープロファイルと学習進捗を永続化する。"""
+
+    _logger = logging.getLogger(__name__)
 
     def __init__(self, db_path: str = ":memory:"):
         path_obj = Path(db_path)
@@ -129,12 +132,17 @@ class UserProfileService:
             try:
                 result.append(self._deserialize_payload(progress_json))
             except Exception:
+                self._logger.warning("学習進捗データ破損: uid=%s", uid)
                 continue
         return result
 
     def add_family_member(self, admin_uid: str, member_uid: str, member_profile: dict) -> bool:
         """家族メンバーを追加する。自分自身（admin_uid == member_uid）は登録不可。"""
         # 自己参照は許可しない
+        if not admin_uid or not admin_uid.strip():
+            raise ValidationError("admin_uid が空です")
+        if not member_uid or not member_uid.strip():
+            raise ValidationError("member_uid が空です")
         if admin_uid == member_uid:
             raise ValidationError("自分自身を家族メンバーに追加することはできません")
         with self._connection:
@@ -170,6 +178,7 @@ class UserProfileService:
             try:
                 result.append(self._deserialize_payload(member_profile_json))
             except Exception:
+                self._logger.warning("家族メンバーデータ破損: admin_uid=%s", admin_uid)
                 continue
         return result
 
