@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-011 完了）
+- フェーズ：**Advanced**（N-001〜N-013 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-012 docs lint 整理完了、N-013 正本ドキュメント整合性回復を Next に追加（2026-05-04）
+- 直近の重要決定：N-013 正本ドキュメント整合性回復完了（requirements / architecture を現実装へ整合、2026-05-04）
 
 ## ロードマップ（概略）
 
@@ -32,17 +32,7 @@
 
 ## Next（自動実行対象：最大3件）
 
-### N-013 正本ドキュメント整合性回復
-
-- **⏳ 未着手**
-- 目的：Google OAuth 本実装後も残っている `docs/requirements.md` と `docs/architecture.md` の古い記述やプレースホルダーを現実装に合わせて是正する
-- 受入条件：
-  - [ ] `docs/requirements.md` の FR-001 が現在の Google OAuth 2.0 実装に一致している
-  - [ ] `docs/architecture.md` の auth 責務記述が現在の実装に一致している
-  - [ ] 対象範囲のテンプレート由来プレースホルダーが解消されている
-  - [ ] 更新した docs の diagnostics が 0 件である
-- 依存：N-012
-- 触る領域：`docs/requirements.md`、`docs/architecture.md`
+- 現在の Next は空。新規要件または Backlog 追加待ち。
 
 ## Backlog（保留）
 
@@ -205,11 +195,11 @@
 | N-010 NFR-030 CLI/runbook 整備 | [#13](https://github.com/weimaraner69-crypto/test02/issues/13) | 4-Advanced | ✅ 完了 | Feature |
 | N-011 Google OAuth 本実装 | [#14](https://github.com/weimaraner69-crypto/test02/issues/14) | 5-Future | ✅ 完了 | Feature |
 | N-012 docs Markdown lint 整理 | [#19](https://github.com/weimaraner69-crypto/test02/issues/19) | 4-Advanced | ✅ 完了 | Maintenance |
-| N-013 正本ドキュメント整合性回復 | [#20](https://github.com/weimaraner69-crypto/test02/issues/20) | 4-Advanced | ⏳ 着手予定 | Maintenance |
+| N-013 正本ドキュメント整合性回復 | [#20](https://github.com/weimaraner69-crypto/test02/issues/20) | 4-Advanced | ✅ 完了 | Maintenance |
 
 ## 直近の変更履歴（最大10件）
 
-- 2026-05-04: N-013 を Next に追加（Issue #20、requirements/architecture の正本整合性回復）
+- 2026-05-04: N-013 完了（requirements / architecture を Google OAuth 本実装に整合、docs diagnostics 0件）
 - 2026-05-04: N-012 完了（docs Markdown lint 整理、`docs/plan.md` / `docs/runbook.md` diagnostics 0件）
 - 2026-05-04: N-011 完了（PR #18 マージ、Google OAuth 本実装、209 passed / 92.89%）、N-012 を Next に昇格
 - 2026-05-02: N-008〜N-010 Next 追加、B-002 Backlog 追加（GitHub Issues #11〜#14 作成）

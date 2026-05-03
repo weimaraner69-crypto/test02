@@ -35,7 +35,9 @@ src/
 
 - `AUTH_MODE` に応じて認証処理を切り替える
 - `mock` は CI / ローカル検証用の固定ダミーユーザーを返す
-- `google` は将来実装のプレースホルダーとして保持する
+- `google` は `google-auth-oauthlib` を使った Google OAuth 2.0 認可コードフローを実行する
+- 認証情報は `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` から取得し、ローカル開発では `http://localhost:8080/auth/callback`、本番運用では HTTPS のリダイレクト URI を利用する
+- 認証後のトークンは `AuthService` 内で一時キャッシュし、Google userinfo API からユーザー情報を取得する
 
 ### permissions/
 
@@ -52,7 +54,7 @@ src/
 ## データフロー
 
 ```text
-1. 環境変数ロード（AUTH_MODE / DATABASE_PATH / GEMINI_*）
+1. 環境変数ロード（AUTH_MODE / GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / DATABASE_PATH / GEMINI_*）
        │
        ▼
 2. 認証（auth/AuthService）→ プロファイル保存（user/UserProfileService）
@@ -73,12 +75,12 @@ src/
 | --- | --- | --- |
 | core | （なし：最下層） | 他の全モジュール |
 | domain | core | auth, drive, gemini, user |
-| auth | core | drive, gemini, user |
+| auth | core, observability | drive, gemini, user |
 | permissions | core | drive, gemini, user |
 | user | core | auth, drive, gemini |
 | drive | core | auth, permissions, user |
-| gemini | core | auth, permissions, user |
-| learning | core, domain, user, gemini | auth, permissions |
+| gemini | core, observability | auth, permissions, user |
+| learning | core, domain, user, gemini, observability | auth, permissions |
 | observability | （外部: OTel SDK） | core, domain, auth, gemini, learning |
 | sample | （なし） | core, domain |
 
