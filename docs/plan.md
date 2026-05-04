@@ -182,6 +182,105 @@
 - 依存：N-011
 - 触る領域：`docs/plan.md`、`docs/runbook.md`
 
+### N-013 正本ドキュメント整合性回復
+
+- **✅ 完了（2026-05-04）**
+- 目的：`docs/requirements.md` と `docs/architecture.md` を N-011（Google OAuth 本実装）の実装に合わせて整合させる
+- 受入条件：
+  - ✅ requirements.md に FR-001 の Google OAuth 動作・失敗時仕様が正確に記載されている
+  - ✅ architecture.md の auth/ 責務記述が実装と整合している
+  - ✅ `get_errors` で対象ドキュメントの diagnostics が 0 件である
+- 依存：N-012
+- 触る領域：`docs/requirements.md`、`docs/architecture.md`
+
+### N-014 app.py ログ整理・web/app.py セキュリティ修正
+
+- **✅ 完了（2026-05-04）**
+- 目的：`src/app.py` の重複コードを排除しログを構造化する。`web/app.py` のハードコード API キーおよび XSS 脆弱性を修正する
+- 受入条件：
+  - ✅ `src/app.py` の重複 Gemini 呼び出しを排除し、すべての `print()` を `logger` に置換
+  - ✅ `web/app.py` の `API_KEY="dummy-key"` を環境変数に変更
+  - ✅ XSS（f-string テンプレート）を Jinja2 `{{ }}` オートエスケープに修正
+  - ✅ `user is None` ガード・`profile_service.close()` を finally に追加
+  - ✅ CI 通過（212 passed, カバレッジ 93.22%）
+- 依存：N-013
+- 触る領域：`src/app.py`、`web/app.py`
+
+### N-015 家族メンバー管理 API
+
+- **✅ 完了（2026-05-04）**
+- 目的：`UserProfileService` に家族メンバーの追加・削除・一覧取得 API を実装する
+- 受入条件：
+  - ✅ `family_members` テーブルがスキーマに追加されている
+  - ✅ `add_family_member` / `remove_family_member` / `get_family_members` が実装されている
+  - ✅ 自己参照・空 uid のバリデーションがある
+  - ✅ CI 通過（214 passed, カバレッジ 91.95%）
+- 依存：N-014
+- 触る領域：`src/user/profile.py`、`tests/`
+
+### N-016 バリデーション強化・Gemini リトライ
+
+- **✅ 完了（2026-05-04）**
+- 目的：`LearningService` に入力バリデーション、`GeminiService` にリトライ機構を追加する
+- 受入条件：
+  - ✅ `validate_grade` が `LearningService` のエントリポイントで呼ばれている
+  - ✅ Gemini 呼び出しで最大 3 回・指数バックオフ（1s/2s/4s）のリトライが実装されている
+  - ✅ `ValidationError` / `ValueError` は即再送出（リトライしない）
+  - ✅ CI 通過（209 passed, カバレッジ 90.53%）
+- 依存：N-015
+- 触る領域：`src/learning/service.py`、`src/gemini/service.py`
+
+### N-017 OAuth トークンローカル永続化
+
+- **✅ 完了（2026-05-04）**
+- 目的：Google OAuth ログイン後のトークンを `TOKEN_PATH`（既定 `data/token.json`）に保存し、次回起動時のブラウザ認証を省略する
+- 受入条件：
+  - ✅ `AuthService.__init__` に `token_path` 引数を追加
+  - ✅ 有効なトークンファイルがある場合はブラウザ認証をスキップする
+  - ✅ 認証後に `creds.to_json()` でトークンをファイルに永続化する
+  - ✅ `data/` を `.gitignore` に追加（P-002）
+  - ✅ `.env.example` に `TOKEN_PATH` を追加
+  - ✅ CI 通過（212 passed, カバレッジ 94.06%）
+- 依存：N-016
+- 触る領域：`src/auth/service.py`、`src/core/config.py`、`src/app.py`、`tests/`、`.env.example`、`.gitignore`
+
+### N-018 web/app.py 現行 API 準拠
+
+- **✅ 完了（2026-05-04）**
+- 目的：`web/app.py` を `AppConfig.from_env()` / `AuthService(mode=...)` / `UserProfileService(db_path=...)` の現行 API に準拠させ、`/health` エンドポイントと Flask テストを追加する
+- 受入条件：
+  - ✅ `AppConfig.from_env()` でコンフィグを一元管理している
+  - ✅ `API_KEY` ハードコードが完全に除去されている（P-002）
+  - ✅ `/health` エンドポイントが追加されている
+  - ✅ Flask テストクライアントを用いた 3 ケースのテストが追加されている
+  - ✅ `flask>=3.0` が `pyproject.toml` の依存に追加されている
+  - ✅ CI 通過（212 passed, カバレッジ 92.89%）
+- 依存：N-017
+- 触る領域：`web/app.py`、`tests/test_web_app.py`、`pyproject.toml`
+
+### N-019 テスト補強
+
+- **✅ 完了（2026-05-04）**
+- 目的：カバレッジの低い箇所（権限型ガード・設定不正値フォールバック）を補強するテストを追加する
+- 受入条件：
+  - ✅ `has_permission` が str 以外を受け取った場合に `False` を返すテストが追加されている
+  - ✅ `AUTH_MODE` 不正値時の `mock` フォールバックをカバーするテストが追加されている
+  - ✅ CI 通過（211 passed, カバレッジ 93.63%）
+- 依存：N-018
+- 触る領域：`tests/test_permissions_roles.py`、`tests/test_config.py`
+
+### N-020 OAuth 永続化仕様の docs 反映
+
+- **✅ 完了（2026-05-04）**
+- 目的：N-017 で実装した OAuth トークン永続化仕様（TOKEN_PATH・再利用動作・フォールバック）を正本 docs に整合させる
+- 受入条件：
+  - ✅ `docs/requirements.md` の FR-001 に TOKEN_PATH・再利用動作・フォールバック仕様を追記している
+  - ✅ `docs/architecture.md` の auth/ 責務とデータフローに TOKEN_PATH を反映している
+  - ✅ `docs/runbook.md` の前提・環境変数・Docker 例・トラブルシュートに TOKEN_PATH 運用を追記している
+  - ✅ `get_errors` で変更した docs の diagnostics が 0 件である
+- 依存：N-019
+- 触る領域：`docs/requirements.md`、`docs/architecture.md`、`docs/runbook.md`
+
 ## GitHub Issue / Project 対応表
 
 | 計画 | Issue | Phase | ステータス | 種別 |
