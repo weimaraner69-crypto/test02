@@ -52,6 +52,15 @@ src/
 - 学習進捗の保存・取得
 - 家族メンバー一覧の参照
 
+### drive/
+
+- FR-030（PDF 一覧取得）と FR-031（メタデータ取得）を実現する `DriveService` を提供する
+- `DriveService.list_pdfs_in_folder(folder_id)` により Google Drive API `files.list` でフォルダ内の PDF ファイル一覧を取得する
+- `DriveService.get_metadata(folder_id, subject)` により `metadata.json` を取得・JSON パースして返す（不在時は `None`）
+- 依存 API：`google-api-python-client`（`googleapiclient.discovery.build`）
+- 認証クレデンシャルは呼び出し元から引数で受け取る（`drive` モジュールは `auth` モジュールに直接依存しない）
+- 権限エラーは `AuthorizationError`、JSON パースエラーは `ValidationError`、API 通信エラーは `RuntimeError` を送出してフェイルクローズ（P-010）
+
 ## データフロー
 
 ```text
