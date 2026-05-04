@@ -7,7 +7,7 @@
 ## 前提
 
 - 秘密情報はリポジトリに含めない（P-002）
-- `.env.example` を `.env` にコピーし、`AUTH_MODE` と `DATABASE_PATH` を確認する
+- `.env.example` を `.env` にコピーし、`AUTH_MODE` / `DATABASE_PATH` / `TOKEN_PATH` を確認する
 
 ## セットアップ
 
@@ -48,6 +48,7 @@ cp .env.example .env
 
 - `AUTH_MODE=mock` でローカル検証を行う
 - `DATABASE_PATH=data/mirastudy.db` で SQLite ファイル保存先を指定する
+- `TOKEN_PATH=data/token.json` で OAuth トークン保存先を指定する（`AUTH_MODE=google` 時）
 
 ## 代表コマンド
 
@@ -356,6 +357,7 @@ P-001〜P-003 違反が発覚した場合の即時対応手順。
 export GOOGLE_CLIENT_ID="<クライアント ID>"
 export GOOGLE_CLIENT_SECRET="<クライアント シークレット>"
 export AUTH_MODE=google
+export TOKEN_PATH=data/token.json
 ```
 
 ⚠️ **セキュリティ**: シークレット情報は環境変数またはシークレット管理システム（AWS Secrets Manager, Google Secret Manager 等）で管理し、**リポジトリにコミットしない**。
@@ -368,6 +370,7 @@ cat >> .env << 'DEVENV'
 AUTH_MODE=google
 GOOGLE_CLIENT_ID="<テスト用クライアント ID>"
 GOOGLE_CLIENT_SECRET="<テスト用クライアント シークレット>"
+TOKEN_PATH=data/token.json
 DEVENV
 
 # アプリを実行
@@ -385,6 +388,7 @@ docker run --rm \
   -e GOOGLE_CLIENT_ID="<本番クライアント ID>" \
   -e GOOGLE_CLIENT_SECRET="<本番クライアント シークレット>" \
   -e AUTH_MODE=google \
+   -e TOKEN_PATH=/app/data/token.json \
   -e DATABASE_PATH=/app/data/mirastudy.db \
   -v /path/to/data:/app/data \
   mirastudy:latest
@@ -397,6 +401,7 @@ docker run --rm \
 | `ValueError: Google OAuth 認証情報が未設定` | GOOGLE_CLIENT_ID / SECRET が未設定 | 環境変数を確認・設定 |
 | `RuntimeError: ローカル web サーバー起動失敗` | ポート 8080 が使用中 | 別のプロセスを終了するか、ポートを変更 |
 | `ImportError: google-auth-oauthlib が未インストール` | 依存ライブラリ未インストール | `pip install google-auth-oauthlib` |
+| トークン再利用されず毎回認証画面が出る | `TOKEN_PATH` の場所が不正 / ファイル権限不足 / 破損 | `TOKEN_PATH` を見直し、破損時はファイルを削除して再認証 |
 | ログイン後に認証エラー | リダイレクト URI が不正 | Google Cloud Console のリダイレクト URI を確認 |
 
 必要に応じて、OAuth 同意画面の公開ステータスとテストユーザー設定も Google Cloud Console 側で確認する。

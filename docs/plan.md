@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-019 完了）
+- フェーズ：**Advanced**（N-001〜N-020 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-014〜N-019 完了（ログ整理・家族 API・バリデーション・OAuth 永続化・Web API・テスト補強、225 passed / 91.88%、2026-05-04）
+- 直近の重要決定：N-020 完了（OAuth トークン永続化仕様を正本 docs に反映、2026-05-04）
 
 ## ロードマップ（概略）
 
@@ -202,9 +202,11 @@
 | N-017 OAuth トークンローカル永続化 | [#25](https://github.com/weimaraner69-crypto/test02/issues/25) | 4-Advanced | ✅ 完了 | Feature |
 | N-018 web/app.py 現行 API 準拠 | [#26](https://github.com/weimaraner69-crypto/test02/issues/26) | 4-Advanced | ✅ 完了 | Maintenance |
 | N-019 テスト補強 | [#27](https://github.com/weimaraner69-crypto/test02/issues/27) | 4-Advanced | ✅ 完了 | QA |
+| N-020 OAuth 永続化仕様の docs 反映 | [#34](https://github.com/weimaraner69-crypto/test02/issues/34) | 4-Advanced | ✅ 完了 | Maintenance |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-04: N-020 完了（requirements / architecture / runbook に TOKEN_PATH とトークン再利用仕様を反映）
 - 2026-05-04: N-014〜N-019 完了（PR #28〜#33 マージ、225 passed / 91.88%）
 - 2026-05-04: N-013 完了（requirements / architecture を Google OAuth 本実装に整合、docs diagnostics 0件）
 - 2026-05-04: N-012 完了（docs Markdown lint 整理、`docs/plan.md` / `docs/runbook.md` diagnostics 0件）
@@ -214,4 +216,3 @@
 - 2026-05-02: B-001 → N-007 昇格（子供向け学習機能、Phase 4 Advanced 着手）
 - 2026-05-02: N-006 完了（SQLite 永続化、runbook/architecture 更新、140 passed / 97.12%）
 - 2026-05-02: N-005 完了（認証モード切り替え、RBAC、PR #8 マージ、128 passed / 96.83%）
-- 2026-05-02: N-004 完了（AppConfig 設定管理・エラーハンドリング強化、PR #7 マージ、117 passed / 98.50%）

@@ -37,7 +37,8 @@ src/
 - `mock` は CI / ローカル検証用の固定ダミーユーザーを返す
 - `google` は `google-auth-oauthlib` を使った Google OAuth 2.0 認可コードフローを実行する
 - 認証情報は `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` から取得し、ローカル開発では `http://localhost:8080/auth/callback`、本番運用では HTTPS のリダイレクト URI を利用する
-- 認証後のトークンは `AuthService` 内で一時キャッシュし、Google userinfo API からユーザー情報を取得する
+- 認証後のトークンは `TOKEN_PATH`（既定 `data/token.json`）に永続化し、有効時は再利用してブラウザ認証をスキップする
+- 実行中は `AuthService` 内にも一時キャッシュし、Google userinfo API からユーザー情報を取得する
 
 ### permissions/
 
@@ -54,7 +55,7 @@ src/
 ## データフロー
 
 ```text
-1. 環境変数ロード（AUTH_MODE / GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / DATABASE_PATH / GEMINI_*）
+1. 環境変数ロード（AUTH_MODE / GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / TOKEN_PATH / DATABASE_PATH / GEMINI_*）
        │
        ▼
 2. 認証（auth/AuthService）→ プロファイル保存（user/UserProfileService）

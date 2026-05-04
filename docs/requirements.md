@@ -40,12 +40,14 @@
 
 - 入力：AUTH_MODE 環境変数（`mock` または `google`）
 - 追加入力：`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`（`AUTH_MODE=google` 時に必須）
+- 追加入力：`TOKEN_PATH`（省略時 `data/token.json`。`AUTH_MODE=google` 時のトークン永続化先）
 - 出力：
   - 認証済みユーザー情報 `dict`（uid / email / displayName / isNewUser）
   - ロール（`admin` / `student` / `parent`）に基づく権限判定結果
 - 動作モード：
   - `AuthMode.MOCK`：テスト用固定ダミーユーザーを返す（CI 向け）
   - `AuthMode.GOOGLE`：Google OAuth 2.0 認可コードフローを実行し、ローカル開発では `http://localhost:8080/auth/callback`、本番運用では HTTPS のリダイレクト URI を用いて認証済みユーザー情報を返す
+  - `AuthMode.GOOGLE`：有効なトークンファイルがある場合はブラウザ認証をスキップし、再認証後はトークンを `TOKEN_PATH` に保存して次回起動時に再利用する
 - 権限マッピング：
   - `admin`：VIEW_KNOWLEDGE / MANAGE_KNOWLEDGE / VIEW_ALL_HISTORY / VIEW_OWN_HISTORY / MANAGE_FAMILY / MANAGE_API_KEY
   - `student`：VIEW_KNOWLEDGE / VIEW_OWN_HISTORY
@@ -56,6 +58,7 @@
   - `AUTH_MODE=google` かつ認証情報未設定 → `ValueError` を送出
   - ローカル web サーバー起動失敗 → `RuntimeError` を送出
   - Google からのユーザー情報取得失敗 → `RuntimeError` を送出
+  - トークンファイルの読み込み失敗/破損 → 警告ログを出力して再認証にフォールバック
 - 担当モジュール：`src/auth/`、`src/permissions/`
 
 ### FR-010 SQLite 永続化
