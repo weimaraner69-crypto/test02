@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-013 完了）
+- フェーズ：**Advanced**（N-001〜N-019 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-013 正本ドキュメント整合性回復完了（requirements / architecture を現実装へ整合、2026-05-04）
+- 直近の重要決定：N-014〜N-019 完了（ログ整理・家族 API・バリデーション・OAuth 永続化・Web API・テスト補強、225 passed / 91.88%、2026-05-04）
 
 ## ロードマップ（概略）
 
@@ -196,9 +196,16 @@
 | N-011 Google OAuth 本実装 | [#14](https://github.com/weimaraner69-crypto/test02/issues/14) | 5-Future | ✅ 完了 | Feature |
 | N-012 docs Markdown lint 整理 | [#19](https://github.com/weimaraner69-crypto/test02/issues/19) | 4-Advanced | ✅ 完了 | Maintenance |
 | N-013 正本ドキュメント整合性回復 | [#20](https://github.com/weimaraner69-crypto/test02/issues/20) | 4-Advanced | ✅ 完了 | Maintenance |
+| N-014 ログ整理・セキュリティ修正 | [#22](https://github.com/weimaraner69-crypto/test02/issues/22) | 4-Advanced | ✅ 完了 | Maintenance |
+| N-015 家族メンバー管理 API | [#23](https://github.com/weimaraner69-crypto/test02/issues/23) | 4-Advanced | ✅ 完了 | Feature |
+| N-016 バリデーション強化・Gemini リトライ | [#24](https://github.com/weimaraner69-crypto/test02/issues/24) | 4-Advanced | ✅ 完了 | Feature |
+| N-017 OAuth トークンローカル永続化 | [#25](https://github.com/weimaraner69-crypto/test02/issues/25) | 4-Advanced | ✅ 完了 | Feature |
+| N-018 web/app.py 現行 API 準拠 | [#26](https://github.com/weimaraner69-crypto/test02/issues/26) | 4-Advanced | ✅ 完了 | Maintenance |
+| N-019 テスト補強 | [#27](https://github.com/weimaraner69-crypto/test02/issues/27) | 4-Advanced | ✅ 完了 | QA |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-04: N-014〜N-019 完了（PR #28〜#33 マージ、225 passed / 91.88%）
 - 2026-05-04: N-013 完了（requirements / architecture を Google OAuth 本実装に整合、docs diagnostics 0件）
 - 2026-05-04: N-012 完了（docs Markdown lint 整理、`docs/plan.md` / `docs/runbook.md` diagnostics 0件）
 - 2026-05-04: N-011 完了（PR #18 マージ、Google OAuth 本実装、209 passed / 92.89%）、N-012 を Next に昇格
