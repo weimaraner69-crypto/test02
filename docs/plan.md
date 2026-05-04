@@ -10,7 +10,7 @@
 
 - フェーズ：**Advanced**（N-001〜N-020 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-020 完了（OAuth トークン永続化仕様を正本 docs に反映、2026-05-04）
+- 直近の重要決定：N-021〜N-026 計画策定（仕様先行 docs → 実 API 実装の順序、2026-05-04）
 
 ## ロードマップ（概略）
 
@@ -32,7 +32,9 @@
 
 ## Next（自動実行対象：最大3件）
 
-- 現在の Next は空。新規要件または Backlog 追加待ち。
+1. **N-021** `constraints.md` プロジェクト固有制約定義（子供向けアプリの学年・コンテンツ安全・API レート制約を定義）
+2. **N-022** `requirements.md` FR-030 Drive 連携要件定義（DriveService 実装前の仕様先行作成）
+3. **N-023** GeminiService 実 API 接続（`google-generativeai` SDK 統合、CI はモック）
 
 ## Backlog（保留）
 
@@ -281,6 +283,88 @@
 - 依存：N-019
 - 触る領域：`docs/requirements.md`、`docs/architecture.md`、`docs/runbook.md`
 
+### N-021 constraints.md プロジェクト固有制約定義
+
+- **📋 予定**
+- 目的：テンプレートのままになっている `docs/constraints.md` に、子供向け学習アプリ固有の制約（学年範囲・コンテンツ安全性・API レート制限・学習セッション時間）を定義する
+- 受入条件：
+  - [ ] C-001（学年制約）：`Grade` を 1〜6 に限定。範囲外は `ValidationError` で拒否
+  - [ ] C-002（コンテンツ安全性）：Gemini 生成コンテンツに対し、不適切表現チェックを定義
+  - [ ] C-003（API レート制限）：Gemini API 呼び出しを 1 ユーザーあたり 10 req/min 以内に制限
+  - [ ] C-004（セッション時間制限）：1 学習セッション上限を 60 分とし、超過時は警告
+  - [ ] 各制約が `docs/constraints.md` の正式フォーマットで記述されている
+  - [ ] `get_errors` で diagnostics が 0 件である
+- 依存：N-020
+- 触る領域：`docs/constraints.md`
+
+### N-022 FR-030 Drive 連携要件定義
+
+- **📋 予定**
+- 目的：`docs/requirements.md` に空欄のままの FR-030 を定義し、`DriveService` 実装の仕様基盤を作る
+- 受入条件：
+  - [ ] FR-030 に「Google Drive 共有フォルダから PDF 一覧を取得する」機能要件を記述
+  - [ ] 入力（`folder_id`）・出力（`list[dict]`）・失敗時挙動が明記されている
+  - [ ] FR-031 として「`metadata.json` 取得」要件を追加
+  - [ ] `docs/architecture.md` の `drive/` 責務を FR-030/031 に整合させる
+  - [ ] `get_errors` で diagnostics が 0 件である
+- 依存：N-021
+- 触る領域：`docs/requirements.md`、`docs/architecture.md`
+
+### N-023 GeminiService 実 API 接続
+
+- **📋 予定**
+- 目的：`GeminiService` のスタブ実装を `google-generativeai` SDK で置き換え、実際の Gemini API で問題を生成できるようにする
+- 受入条件：
+  - [ ] `google-generativeai>=0.7` を `pyproject.toml` に追加
+  - [ ] `GeminiService.__init__` で `genai.configure(api_key=self.api_key)` を呼び出す
+  - [ ] `generate_question` が `genai.GenerativeModel.generate_content()` で JSON レスポンスを返す
+  - [ ] CI では `genai` モジュールをモックし、既存リトライロジックが通過する
+  - [ ] `src/gemini/service.py` のカバレッジが 85% 以上になる
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-022
+- 触る領域：`src/gemini/service.py`、`tests/test_gemini_service.py`、`pyproject.toml`
+
+### N-024 DriveService Google Drive API 実装
+
+- **📋 予定（Backlog）**
+- 目的：`DriveService` のスタブを `google-api-python-client` で置き換え、実際の Google Drive から PDF 一覧・`metadata.json` を取得できるようにする
+- 受入条件：
+  - [ ] `google-api-python-client>=2.0` を `pyproject.toml` に追加
+  - [ ] `list_pdfs_in_folder(folder_id)` が Drive API `files.list` を呼び出す
+  - [ ] `get_metadata(folder_id, subject)` が Drive API 経由で `metadata.json` を取得・パースする
+  - [ ] CI では Drive API をモックし、テストが通過する
+  - [ ] FR-030/031 受入条件をすべて満たす
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-023
+- 触る領域：`src/drive/service.py`、`tests/test_drive_service.py`、`pyproject.toml`
+
+### N-025 auth・gemini カバレッジ補強
+
+- **📋 予定（Backlog）**
+- 目的：カバレッジが低い `src/auth/service.py`（81%）と `src/gemini/service.py`（65%）のテストを補強し、90% 以上にする
+- 受入条件：
+  - [ ] `auth/service.py` の line 60-62、88-92、118-120、129-130、141-143 をカバーするテストを追加
+  - [ ] `gemini/service.py` の line 35-36、49-57 をカバーするテストを追加
+  - [ ] `src/auth/service.py` カバレッジ 90% 以上
+  - [ ] `src/gemini/service.py` カバレッジ 85% 以上
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-024
+- 触る領域：`tests/test_auth_service.py`、`tests/test_gemini_service.py`
+
+### N-026 Flask セッション管理
+
+- **📋 予定（Backlog）**
+- 目的：`web/app.py` にサーバーサイドセッションを追加し、ログイン状態をリクエスト間で維持できるようにする
+- 受入条件：
+  - [ ] `flask-login` または `flask` 標準セッションでログイン状態を維持
+  - [ ] `SECRET_KEY` 環境変数でセッション署名キーを設定（未設定時は起動エラー）
+  - [ ] 未ログイン時にログインページへリダイレクト
+  - [ ] セッションハイジャック対策（`SESSION_COOKIE_HTTPONLY=True`、`SESSION_COOKIE_SECURE=True`）が設定されている
+  - [ ] テストでセッションありの認証フローを検証する
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-025
+- 触る領域：`web/app.py`、`tests/test_web_app.py`
+
 ## GitHub Issue / Project 対応表
 
 | 計画 | Issue | Phase | ステータス | 種別 |
@@ -302,9 +386,16 @@
 | N-018 web/app.py 現行 API 準拠 | [#26](https://github.com/weimaraner69-crypto/test02/issues/26) | 4-Advanced | ✅ 完了 | Maintenance |
 | N-019 テスト補強 | [#27](https://github.com/weimaraner69-crypto/test02/issues/27) | 4-Advanced | ✅ 完了 | QA |
 | N-020 OAuth 永続化仕様の docs 反映 | [#34](https://github.com/weimaraner69-crypto/test02/issues/34) | 4-Advanced | ✅ 完了 | Maintenance |
+| N-021 constraints.md プロジェクト固有制約定義 | [#35](https://github.com/weimaraner69-crypto/test02/issues/35) | 5-Future | 📋 予定 | Maintenance |
+| N-022 FR-030 Drive 連携要件定義 | [#36](https://github.com/weimaraner69-crypto/test02/issues/36) | 5-Future | 📋 予定 | Maintenance |
+| N-023 GeminiService 実 API 接続 | [#37](https://github.com/weimaraner69-crypto/test02/issues/37) | 5-Future | 📋 予定 | Feature |
+| N-024 DriveService Google Drive API 実装 | [#38](https://github.com/weimaraner69-crypto/test02/issues/38) | 5-Future | 📋 予定 | Feature |
+| N-025 auth・gemini カバレッジ補強 | [#39](https://github.com/weimaraner69-crypto/test02/issues/39) | 5-Future | 📋 予定 | QA |
+| N-026 Flask セッション管理 | [#40](https://github.com/weimaraner69-crypto/test02/issues/40) | 5-Future | 📋 予定 | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-04: N-021〜N-026 を計画（Next 3件 + Backlog 3件。仕様先行：N-021 constraints.md → N-022 FR-030 → N-023 Gemini 実 API）
 - 2026-05-04: N-020 完了（requirements / architecture / runbook に TOKEN_PATH とトークン再利用仕様を反映）
 - 2026-05-04: N-014〜N-019 完了（PR #28〜#33 マージ、225 passed / 91.88%）
 - 2026-05-04: N-013 完了（requirements / architecture を Google OAuth 本実装に整合、docs diagnostics 0件）
