@@ -10,7 +10,7 @@
 
 - フェーズ：**Advanced**（N-001〜N-020 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-021〜N-026 計画策定（仕様先行 docs → 実 API 実装の順序、2026-05-04）
+- 直近の重要決定：N-021〜N-023 実装完了・ PR レビュー待ち（PR #41/#42/#43、マージ順序: #41→#42→#43、2026-05-05）
 
 ## ロードマップ（概略）
 
@@ -32,9 +32,9 @@
 
 ## Next（自動実行対象：最大3件）
 
-1. **N-021** `constraints.md` プロジェクト固有制約定義（子供向けアプリの学年・コンテンツ安全・API レート制約を定義）
-2. **N-022** `requirements.md` FR-030 Drive 連携要件定義（DriveService 実装前の仕様先行作成）
-3. **N-023** GeminiService 実 API 接続（`google-generativeai` SDK 統合、CI はモック）
+1. **N-024** DriveService Google Drive API 実装（N-022 実装完了，N-021/022/023 マージ待ち）
+2. **N-025** auth/gemini カバレッジ補強（auth 81%、gemini 65% → 90%+）
+3. **N-026** Flask セッション管理（SECRET_KEY 環境変数・スッションハイジャック対策）
 
 ## Backlog（保留）
 
@@ -386,15 +386,17 @@
 | N-018 web/app.py 現行 API 準拠 | [#26](https://github.com/weimaraner69-crypto/test02/issues/26) | 4-Advanced | ✅ 完了 | Maintenance |
 | N-019 テスト補強 | [#27](https://github.com/weimaraner69-crypto/test02/issues/27) | 4-Advanced | ✅ 完了 | QA |
 | N-020 OAuth 永続化仕様の docs 反映 | [#34](https://github.com/weimaraner69-crypto/test02/issues/34) | 4-Advanced | ✅ 完了 | Maintenance |
-| N-021 constraints.md プロジェクト固有制約定義 | [#35](https://github.com/weimaraner69-crypto/test02/issues/35) | 5-Future | 📋 予定 | Maintenance |
-| N-022 FR-030 Drive 連携要件定義 | [#36](https://github.com/weimaraner69-crypto/test02/issues/36) | 5-Future | 📋 予定 | Maintenance |
-| N-023 GeminiService 実 API 接続 | [#37](https://github.com/weimaraner69-crypto/test02/issues/37) | 5-Future | 📋 予定 | Feature |
+| N-021 constraints.md プロジェクト固有制約定義 | [#35](https://github.com/weimaraner69-crypto/test02/issues/35) | 5-Future | � PR レビュー待ち | Maintenance |
+| N-022 FR-030 Drive 連携要件定義 | [#36](https://github.com/weimaraner69-crypto/test02/issues/36) | 5-Future | 🔄 PR レビュー待ち | Maintenance |
+| N-023 GeminiService 実 API 接続 | [#37](https://github.com/weimaraner69-crypto/test02/issues/37) | 5-Future | 🔄 PR レビュー待ち | Feature |
 | N-024 DriveService Google Drive API 実装 | [#38](https://github.com/weimaraner69-crypto/test02/issues/38) | 5-Future | 📋 予定 | Feature |
 | N-025 auth・gemini カバレッジ補強 | [#39](https://github.com/weimaraner69-crypto/test02/issues/39) | 5-Future | 📋 予定 | QA |
 | N-026 Flask セッション管理 | [#40](https://github.com/weimaraner69-crypto/test02/issues/40) | 5-Future | 📋 予定 | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-05: N-021〜N-023 実装完了（PR #41/#42/#43 作成、CI 全グリーン、リリースマネージャー approve、マージ順序 #41→#42→#43）
+- 2026-05-05: N-024〜N-026 を Next に是格昇格（DriveService 実装・カバレッジ補強・Flask セッション）
 - 2026-05-04: N-021〜N-026 を計画（Next 3件 + Backlog 3件。仕様先行：N-021 constraints.md → N-022 FR-030 → N-023 Gemini 実 API）
 - 2026-05-04: N-020 完了（requirements / architecture / runbook に TOKEN_PATH とトークン再利用仕様を反映）
 - 2026-05-04: N-014〜N-019 完了（PR #28〜#33 マージ、225 passed / 91.88%）
