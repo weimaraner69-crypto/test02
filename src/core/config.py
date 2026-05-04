@@ -38,6 +38,8 @@ class AppConfig:
     auth_mode: str = field(default="mock")
     google_client_id: str = field(default="", repr=False)
     google_client_secret: str = field(default="", repr=False)
+    # OAuthトークンの保存先パス（相対パスのみ許可）
+    token_path: str = field(default="data/token.json")
 
     @classmethod
     def from_env(cls) -> AppConfig:
@@ -78,6 +80,15 @@ class AppConfig:
                 database_path_raw,
             )
             database_path_raw = "data/mirastudy.db"
+        # token_path のバリデーション（絶対パスと .. を禁止）
+        token_path_raw = os.environ.get("TOKEN_PATH", "data/token.json")
+        token_path_obj = Path(token_path_raw)
+        if token_path_obj.is_absolute() or ".." in token_path_obj.parts:
+            logger.warning(
+                "TOKEN_PATH の値 %r は不正です。既定値 'data/token.json' を使用します。",
+                token_path_raw,
+            )
+            token_path_raw = "data/token.json"
         return cls(
             api_key=os.environ.get("GEMINI_API_KEY", ""),
             log_level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -88,4 +99,5 @@ class AppConfig:
             auth_mode=auth_mode_raw,
             google_client_id=os.environ.get("GOOGLE_CLIENT_ID", ""),
             google_client_secret=os.environ.get("GOOGLE_CLIENT_SECRET", ""),
+            token_path=token_path_raw,
         )
