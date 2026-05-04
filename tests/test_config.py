@@ -112,3 +112,12 @@ def test_config_database_path_invalid_falls_back_to_default(
     config = AppConfig.from_env()
 
     assert config.database_path == "data/mirastudy.db"
+
+
+def test_config_invalid_auth_mode_falls_back_to_mock(monkeypatch: pytest.MonkeyPatch) -> None:
+    """AUTH_MODE に無効値が設定された場合は 'mock' にフォールバックする。"""
+    monkeypatch.setenv("AUTH_MODE", "invalid_mode")
+
+    config = AppConfig.from_env()
+
+    assert config.auth_mode == "mock"
