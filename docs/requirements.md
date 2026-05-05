@@ -98,7 +98,41 @@
   - 進捗保存失敗 → `ValidationError` を送出
 - 担当モジュール：`src/learning/`, `src/domain/learning.py`
 
-<!-- 必要に応じて FR-030 ... を追加 -->
+### FR-030 Google Drive PDF 一覧取得
+
+- 概要：保護者または管理者が設定した Google Drive 共有フォルダから、学習コンテンツ用 PDF ファイルの一覧を取得する
+- 入力：`folder_id`（string）— Google Drive の共有フォルダ ID
+- 出力：`list[dict]`。各エントリは `{"id": str, "name": str}` の形式
+- 動作：
+  - `DriveService.list_pdfs_in_folder(folder_id)` を呼び出す
+  - Google Drive API `files.list` でフォルダ内の PDF（mimeType: `application/pdf`）を検索する
+  - 結果を `{"id": file_id, "name": file_name}` のリスト形式で返す
+  - PDF が存在しない場合は空リスト `[]` を返す（例外は送出しない）
+- 失敗時：
+  - フォルダが存在しない / ID が不正 → `ValidationError`(`reason_code="FR030_folder_not_found"`)を送出
+  - フォルダへのアクセス権限なし → `AuthorizationError`を送出
+  - API 通信エラー → `RuntimeError` を送出してフェイルクローズ（P-010）
+- 担当モジュール：`src/drive/`
+
+### FR-031 Google Drive メタデータ取得
+
+- 概要：Google Drive 共有フォルダから、科目別の学習コンテンツメタデータ（`metadata.json`）を取得・パースする
+- 入力：`folder_id`（string）、`subject`（string）— 科目識別子
+- 出力：`dict | None`。以下の**いずれか**を返す（例外は送出しない）：
+  - `subject` 一致：`{"file_id": str, "subject": str, "chapters": list}`（`file_id` は Drive 検索結果のファイル ID）
+  - `metadata.json` 不存在：`None`
+  - `subject` 不一致：`None`（`metadata.json` が存在しても不一致なら `None` を返す）
+- 動作：
+  - `DriveService.get_metadata(folder_id, subject)` を呼び出す
+  - `metadata.json` という名前のファイルを Drive フォルダ内で検索し、内容を JSON パースする
+  - `metadata.json` が存在しない場合は `None` を返す（例外は送出しない）
+  - `subject` は返却 JSON の `subject` フィールドとの照合にのみ使用する。一致しない場合は `None` を返す（例外は送出しない）。Drive フォルダ内のファイル選別（検索条件）には使用しない
+- 失敗時：
+  - フォルダが存在しない / ID が不正 → `ValidationError`(`reason_code="FR031_folder_not_found"`)を送出
+  - フォルダへのアクセス権限なし → `AuthorizationError` を送出
+  - JSON パースエラー → `ValidationError` を送出
+  - API 通信エラー → `RuntimeError` を送出してフェイルクローズ（P-010）
+- 担当モジュール：`src/drive/`
 
 ## 非機能要件（NFR）
 
