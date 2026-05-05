@@ -9,8 +9,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-# CI 環境では google-generativeai が未インストールのため、
-# 全テストでデフォルトモックを適用する。
+# google-generativeai は pyproject.toml の依存に含まれ CI でもインストール済みだが、
+# 外部 API を呼び出さないよう全テストでデフォルトモックを適用する。
 # 個別テストで patch(...) を使う場合はそちらが優先される。
 _DEFAULT_GENAI_RESPONSE = {
     "question": {

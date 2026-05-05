@@ -85,8 +85,11 @@ class GeminiService:
             except (ValidationError, ValueError):
                 # バリデーションエラーはリトライせず即座に再送出する
                 raise
-            except Exception as exc:
+            except (RuntimeError, OSError, ConnectionError, TimeoutError) as exc:
+                # 上記例外のみリトライ対象とし、それ以外は即座に再送出する
                 last_exc = exc
+            except Exception:
+                raise
         # すべてのリトライが失敗した場合は最後の例外を再送出する
         if last_exc is not None:
             raise last_exc

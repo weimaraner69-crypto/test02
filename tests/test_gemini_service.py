@@ -114,3 +114,62 @@ def test_generate_question_validation_error_no_retry():
 
     # sleep は一切呼ばれないことを確認する
     mock_sleep.assert_not_called()
+
+
+def test_init_calls_genai_configure():
+    """__init__ で genai.configure(api_key=...) が正しいキーで呼ばれることを確認する。"""
+    with (
+        patch("src.gemini.service.genai") as mock_genai,
+        patch("src.gemini.service._GENAI_AVAILABLE", True),
+    ):
+        mock_genai.configure = MagicMock()
+        GeminiService(api_key="my-secret-key")
+        mock_genai.configure.assert_called_once_with(api_key="my-secret-key")
+
+
+def test_generate_question_sdk_not_available():
+    """SDK 未インストール時に RuntimeError が即座に送出されることを確認する。"""
+    with (
+        patch("src.gemini.service._GENAI_AVAILABLE", False),
+        patch("src.gemini.service.genai", None),
+    ):
+        service = GeminiService(api_key="test-key")
+        with pytest.raises(RuntimeError, match="未インストール"):
+            service.generate_question("コンテキスト", "算数", 3)
+
+
+def test_generate_question_markdown_code_fence():
+    """レスポンスが Markdown コードフェンスで囲まれていても正しくパースされることを確認する。"""
+    fenced_text = "```json\n" + json.dumps(_VALID_RESPONSE) + "\n```"
+    mock_response = _make_mock_response(fenced_text)
+
+    with (
+        patch("src.gemini.service.genai") as mock_genai,
+        patch("src.gemini.service._GENAI_AVAILABLE", True),
+    ):
+        mock_genai.GenerativeModel.return_value.generate_content.return_value = mock_response
+        mock_genai.configure = MagicMock()
+        service = GeminiService(api_key="test-key")
+        result = service.generate_question("コンテキスト", "理科", 2)
+
+    assert result is not None
+    assert result["question"]["text"] == "テスト問題"
+
+
+def test_generate_question_unexpected_exception_no_retry():
+    """想定外例外（AttributeError 等）はリトライせず即座に再送出されることを確認する。"""
+    with (
+        patch("src.gemini.service.genai") as mock_genai,
+        patch("src.gemini.service._GENAI_AVAILABLE", True),
+        patch("src.gemini.service.time.sleep") as mock_sleep,
+    ):
+        mock_genai.configure = MagicMock()
+        mock_genai.GenerativeModel.return_value.generate_content.side_effect = AttributeError(
+            "想定外エラー"
+        )
+        service = GeminiService(api_key="test-key")
+        with pytest.raises(AttributeError, match="想定外エラー"):
+            service.generate_question("コンテキスト", "算数", 3)
+
+    # リトライしないので sleep は呼ばれない
+    mock_sleep.assert_not_called()
