@@ -39,6 +39,7 @@ class GeminiService:
         RuntimeError / OSError / ConnectionError / TimeoutError 発生時は
         指数バックオフ（1s, 2s, 4s）で最大3回リトライする。
         ValidationError / ValueError は即座に再送出する（リトライしない）。
+        上記以外の想定外例外（TypeError, AttributeError 等）も即座に再送出する（リトライしない）。
         """
         # SDK 未インストール時は即座にエラーを送出する
         if not _GENAI_AVAILABLE or genai is None:
@@ -89,6 +90,7 @@ class GeminiService:
                 # 上記例外のみリトライ対象とし、それ以外は即座に再送出する
                 last_exc = exc
             except Exception:
+                # TypeError / AttributeError 等の想定外例外はリトライせず即座に再送出する
                 raise
         # すべてのリトライが失敗した場合は最後の例外を再送出する
         if last_exc is not None:

@@ -1,5 +1,5 @@
 """
-src/gemini/service.py の Gemini API 連携サービステスト
+src/gemini/service.py の GeminiService テスト
 """
 
 import json

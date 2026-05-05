@@ -26,7 +26,10 @@ _DEFAULT_GENAI_RESPONSE = {
 
 @pytest.fixture(autouse=True)
 def _mock_genai_globally(monkeypatch: pytest.MonkeyPatch) -> None:
-    """CI で google-generativeai なしに全テストが通るよう genai をモックする。"""
+    """外部 API を呼び出さないよう全テストで genai をモックする。
+    個別テストで patch(...) を使う場合はそちらが優先される。
+    SDK 未インストール時の挙動を検証したいテストは _GENAI_AVAILABLE=False を直接パッチする。
+    """
     mock_response = MagicMock()
     mock_response.text = json.dumps(_DEFAULT_GENAI_RESPONSE)
     mock_response.candidates = []
