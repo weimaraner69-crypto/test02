@@ -118,14 +118,15 @@
 
 - 概要：Google Drive 共有フォルダから、科目別の学習コンテンツメタデータ（`metadata.json`）を取得・パースする
 - 入力：`folder_id`（string）、`subject`（string）— 科目識別子
-- 出力：`dict | None`。以下のいずれかのパターン：
-  - 一致：`{"file_id": str, "subject": str, "chapters": list}` を返す（file_id は Drive 検索結果から取得）
-  - 不一致または metadata.json が空：`None` を返す（例外は送出しない）
+- 出力：`dict | None`。以下の**いずれか**を返す（例外は送出しない）：
+  - `subject` 一致：`{"file_id": str, "subject": str, "chapters": list}`（`file_id` は Drive 検索結果のファイル ID）
+  - `metadata.json` 不存在：`None`
+  - `subject` 不一致：`None`（`metadata.json` が存在しても不一致なら `None` を返す）
 - 動作：
   - `DriveService.get_metadata(folder_id, subject)` を呼び出す
   - `metadata.json` という名前のファイルを Drive フォルダ内で検索し、内容を JSON パースする
   - `metadata.json` が存在しない場合は `None` を返す（例外は送出しない）
-  - `subject` は返却 JSON の `subject` フィールドとの照合にのみ使用し、一致しない場合は `None` を返す。Drive フォルダ内のファイル選別（検索条件）には使用しない
+  - `subject` は返却 JSON の `subject` フィールドとの照合にのみ使用する。一致しない場合は `None` を返す（例外は送出しない）。Drive フォルダ内のファイル選別（検索条件）には使用しない
 - 失敗時：
   - フォルダが存在しない / ID が不正 → `ValidationError`(`reason_code="FR031_folder_not_found"`)を送出
   - フォルダへのアクセス権限なし → `AuthorizationError` を送出

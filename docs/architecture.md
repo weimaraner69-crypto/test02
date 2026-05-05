@@ -58,7 +58,7 @@ src/
 - `DriveService.list_pdfs_in_folder(folder_id)` により Google Drive API `files.list` でフォルダ内の PDF ファイル一覧を取得する
 - `DriveService.get_metadata(folder_id, subject)` により `metadata.json` を取得・JSON パースして返す（不存在時は `None`、subject 不一致時も `None`）
   - `subject` パラメータ：返却 JSON の `subject` フィールドとの照合にのみ使用し、Drive フォルダ内のファイル選別条件には使用しない
-- 認証クレデンシャルは `DriveService.__init__(service)` で `googleapiclient.discovery.Resource` オブジェクトを受け取り、メソッド内で使用する（`drive` モジュールは `auth` モジュールに直接依存しない）
+- 認証クレデンシャルは `DriveService.__init__(service: googleapiclient.discovery.Resource)` の引数として注入する。各メソッド（`list_pdfs_in_folder`・`get_metadata`）に追加引数は不要。（`drive` モジュールは `auth` モジュールに直接依存しない）
 - 権限エラーは `AuthorizationError`、JSON パースエラーは `ValidationError`、API 通信エラーは `RuntimeError` を送出してフェイルクローズ（P-010）
 
 ## データフロー
