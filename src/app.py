@@ -25,6 +25,43 @@ from src.user.profile import UserProfileService
 logger = logging.getLogger(__name__)
 
 
+class _MockDriveResource:
+    """モックモード用 Drive API スタブ。テスト・開発環境でのみ使用する。"""
+
+    class _Files:
+        """files() チェーン呼び出しをサポートするスタブ。"""
+
+        def list(self, **_kwargs: object) -> _MockDriveResource._Files:
+            return self
+
+        def get_media(self, **_kwargs: object) -> _MockDriveResource._Files:
+            return self
+
+        def execute(self) -> dict:
+            return {"files": []}
+
+    def files(self) -> _MockDriveResource._Files:
+        return self._Files()
+
+
+def _build_drive_resource(auth_mode: str) -> object:
+    """AUTH_MODE に応じた Drive API リソースを返す。
+
+    Args:
+        auth_mode: "mock" の場合はスタブを返す。それ以外は本番リソースを構築する。
+
+    Returns:
+        Drive API リソースオブジェクト
+
+    Raises:
+        RuntimeError: 本番モードで SDK が未インストールの場合
+    """
+    if auth_mode == "mock":
+        return _MockDriveResource()
+    # 本番環境では認証済みクレデンシャルが必要（将来実装）
+    raise RuntimeError("本番 Drive 認証は未実装です。AUTH_MODE=mock で実行してください。")
+
+
 def _setup_logging(level: str) -> None:
     """ログ設定を初期化する。"""
     logging.basicConfig(
@@ -65,7 +102,7 @@ def main() -> None:
         logger.info("知識共有フォルダ閲覧権限あり")
 
         # Drive連携
-        drive = DriveService()
+        drive = DriveService(service=_build_drive_resource(config.auth_mode))
         pdfs = drive.list_pdfs_in_folder(config.drive_folder_id)
         logger.info("PDF一覧: %s", pdfs)
         meta = drive.get_metadata(config.drive_folder_id, config.gemini_topic)

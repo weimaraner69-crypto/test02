@@ -6,7 +6,9 @@
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
+from unittest.mock import MagicMock
 
 from src.app import main
 from src.auth.service import AuthService
@@ -63,7 +65,11 @@ def test_permission_admin_has_all_permissions():
 
 def test_drive_list_pdfs_returns_list():
     """DriveService が PDF 一覧（リスト）を返す。"""
-    drive = DriveService()
+    mock_service = MagicMock()
+    mock_service.files.return_value.list.return_value.execute.return_value = {
+        "files": [{"id": "pdf1", "name": "sample.pdf"}]
+    }
+    drive = DriveService(mock_service)
     pdfs = drive.list_pdfs_in_folder("folder_test")
     assert isinstance(pdfs, list)
     assert len(pdfs) > 0
@@ -73,7 +79,13 @@ def test_drive_list_pdfs_returns_list():
 
 def test_drive_get_metadata_returns_dict():
     """DriveService が metadata 辞書を返す。"""
-    drive = DriveService()
+    metadata = json.dumps({"subject": "算数", "chapters": ["ch1"]}).encode()
+    mock_service = MagicMock()
+    mock_service.files.return_value.list.return_value.execute.return_value = {
+        "files": [{"id": "meta1", "name": "metadata.json"}]
+    }
+    mock_service.files.return_value.get_media.return_value.execute.return_value = metadata
+    drive = DriveService(mock_service)
     meta = drive.get_metadata("folder_test", "算数")
     assert meta is not None
     assert "subject" in meta
@@ -118,7 +130,9 @@ def test_full_pipeline_flow() -> None:
     assert isinstance(can_view, bool)
 
     # Drive 連携
-    drive = DriveService()
+    mock_svc = MagicMock()
+    mock_svc.files.return_value.list.return_value.execute.return_value = {"files": []}
+    drive = DriveService(mock_svc)
     pdfs = drive.list_pdfs_in_folder("folder1")
     assert isinstance(pdfs, list)
 

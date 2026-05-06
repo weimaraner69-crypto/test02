@@ -32,7 +32,7 @@
 | grade < 1 | grade が 1 未満 | `ValidationError` を送出して処理を中断 |
 | grade > 6 | grade が 6 超過 | `ValidationError` を送出して処理を中断 |
 
-> **注記**: `ValidationError` 送出時は `reason_code` 属性に `"C001_invalid_grade"` を設定すること（N-025 はカバレッジ補強専任のため対象外。実装タスクは Backlog に別途追加予定）。
+> **注記**: `ValidationError` 送出時は `reason_code` 属性に `"C001_invalid_grade"` を設定すること。N-024 にて `ValidationError.__init__(message, reason_code=None)` を `src/core/exceptions.py` に実装済み（FR-030/031 の `reason_code` と共通）。`domain/learning.py` の `validate_grade()` への `reason_code="C001_invalid_grade"` 付与は Backlog に別途追加予定。
 
 ### C-002 コンテンツ安全性
 
