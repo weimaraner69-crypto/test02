@@ -7,7 +7,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
-from src.core.exceptions import ValidationError
+from src.core.exceptions import RateLimitError, ValidationError
 from src.domain.learning import LearningContent, Subject
 from src.gemini.service import GeminiService
 from src.learning.service import LearningService
@@ -145,3 +145,95 @@ def test_record_answer_save_failure_raises(svc_with_uid) -> None:
         pytest.raises(ValidationError),
     ):
         service.record_answer(uid, Subject.MATH, "わり算", is_correct=True)
+
+
+# ─────────────────────────────────────────────
+# C-003 API レート制限（境界値）
+# ─────────────────────────────────────────────
+
+
+def test_generate_question_user_rate_limit_at_boundary_allows_10_calls(svc_with_uid) -> None:
+    """ユーザー単位しきい値ちょうど（10回/60秒）は許可される。"""
+    service, uid = svc_with_uid
+    with (
+        patch.object(service._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=1000.0),
+    ):
+        for _ in range(10):
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+
+
+def test_generate_question_user_rate_limit_exceeds_rejected_on_11th_call(svc_with_uid) -> None:
+    """ユーザー単位しきい値直上（11回目）は RateLimitError で拒否される。"""
+    service, uid = svc_with_uid
+    with (
+        patch.object(service._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=1000.0),
+    ):
+        for _ in range(10):
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+        with pytest.raises(RateLimitError, match="しばらく時間をおいて") as exc_info:
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+    assert exc_info.value.reason_code == "C003_rate_limit_exceeded"
+
+
+def test_generate_question_global_rate_limit_exceeds_rejected_on_51st_call(svc) -> None:
+    """全体しきい値直上（51回目）は RateLimitError で拒否される。"""
+    service = svc
+    for i in range(51):
+        uid = f"user-{i:02d}"
+        service._profile.set_profile(uid, {"uid": uid, "role": "student"})
+
+    with (
+        patch.object(service._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=2000.0),
+    ):
+        for i in range(50):
+            uid = f"user-{i:02d}"
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+        with pytest.raises(RateLimitError, match="アクセスが集中") as exc_info:
+            service.generate_question("user-50", grade=3, subject=Subject.MATH, topic="わり算")
+    assert exc_info.value.reason_code == "C003_rate_limit_exceeded"
+
+
+# ─────────────────────────────────────────────
+# C-004 セッション時間制限（境界値）
+# ─────────────────────────────────────────────
+
+
+def test_generate_question_session_time_at_3600_seconds_allows(svc_with_uid) -> None:
+    """警告しきい値ちょうど（3600秒）は許可される。"""
+    service, uid = svc_with_uid
+    with patch.object(service._gemini, "generate_question", return_value={"question": {}}):
+        with patch("src.learning.service.time.time", return_value=1000.0):
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+        with patch("src.learning.service.time.time", return_value=4600.0):
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+
+
+def test_generate_question_session_time_warn_over_3600_seconds_rejected(svc_with_uid) -> None:
+    """警告しきい値直上（3601秒）は ValidationError で一時停止される。"""
+    service, uid = svc_with_uid
+    with patch.object(service._gemini, "generate_question", return_value={"question": {}}):
+        with patch("src.learning.service.time.time", return_value=1000.0):
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+        with (
+            patch("src.learning.service.time.time", return_value=4601.0),
+            pytest.raises(ValidationError, match="60分を超えました") as exc_info,
+        ):
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+    assert exc_info.value.reason_code == "C004_session_timeout"
+
+
+def test_generate_question_session_time_force_stop_over_7200_seconds_rejected(svc_with_uid) -> None:
+    """強制終了しきい値直上（7201秒）は ValidationError で拒否される。"""
+    service, uid = svc_with_uid
+    with patch.object(service._gemini, "generate_question", return_value={"question": {}}):
+        with patch("src.learning.service.time.time", return_value=1000.0):
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+        with (
+            patch("src.learning.service.time.time", return_value=8201.0),
+            pytest.raises(ValidationError, match="120分を超えました") as exc_info,
+        ):
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+    assert exc_info.value.reason_code == "C004_session_timeout"

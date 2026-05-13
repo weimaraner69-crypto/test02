@@ -63,7 +63,7 @@
 - 判定②：全ユーザー合計の Gemini API 呼び出しが 60 秒以内に 50 回を超えた場合に発動
 - 理由コード：`C003_rate_limit_exceeded`
 
-> **注記**: 将来実装予定。N-026（Flask セッション管理）はログインセッションが主題でレート追跡を含まない。レート追跡は Backlog に別途追加予定。
+> **注記**: N-027 にて実装済み。`LearningService.generate_question()` 呼び出し時にユーザー単位（10 req/min）と全体単位（50 req/min）を検証し、超過時は `RateLimitError(reason_code="C003_rate_limit_exceeded")` を送出する。
 
 #### C-003 閾値定義
 
@@ -84,7 +84,7 @@
 - 判定②：継続時間が 120 分を超えた場合に強制終了を発動
 - 理由コード：`C004_session_timeout`
 
-> **注記**: 将来実装予定。N-026（Flask セッション管理）はログインセッションの維持と Cookie/SECRET_KEY 設定が主題であり、経過時間監視を含まない。セッション時間制限は Backlog に別途追加予定。
+> **注記**: N-028 にて実装済み。`LearningService.generate_question()` 呼び出し時にセッション継続時間を検証し、60分超過時は警告（`ValidationError`）、120分超過時は強制終了（`ValidationError(reason_code="C004_session_timeout")`）を発動する。
 
 #### C-004 閾値定義
 

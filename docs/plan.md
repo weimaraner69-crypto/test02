@@ -32,8 +32,8 @@
 
 ## Next（自動実行対象：最大3件）
 
-1. **N-027** C-003 Gemini API レート制限実装（1ユーザー10 req/min、全体50 req/min）
-2. **N-028** C-004 学習セッション時間制限実装（警告60分、強制終了120分）
+1. （空き）
+2. （空き）
 3. （空き）
 
 ## Backlog（保留）
@@ -365,6 +365,32 @@
 - 依存：N-025
 - 触る領域：`web/app.py`、`tests/test_web_app.py`
 
+### N-027 C-003 Gemini API レート制限実装
+
+- **✅ 完了（2026-05-14）**
+- 目的：Gemini API 呼び出しを 1 ユーザー 10 req/min、全体 50 req/min に制限し、過負荷時にフェイルクローズする
+- 受入条件：
+  - [x] 1ユーザー 10 req/min のしきい値を実装
+  - [x] 全体 50 req/min のしきい値を実装
+  - [x] しきい値超過時に `RateLimitError(reason_code="C003_rate_limit_exceeded")` を送出
+  - [x] 境界値テスト（ちょうど/直上）を追加
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-026
+- 触る領域：`src/core/exceptions.py`、`src/learning/service.py`、`tests/test_learning_service.py`
+
+### N-028 C-004 学習セッション時間制限実装
+
+- **✅ 完了（2026-05-14）**
+- 目的：学習セッションの継続時間を監視し、60分超過で警告、120分超過で強制停止する
+- 受入条件：
+  - [x] セッション継続時間を追跡する
+  - [x] 60分超過で警告（`ValidationError(reason_code="C004_session_timeout")`）
+  - [x] 120分超過で強制停止（`ValidationError(reason_code="C004_session_timeout")`）
+  - [x] 境界値テスト（3600秒/3601秒、7200秒/7201秒）を追加
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-027
+- 触る領域：`src/learning/service.py`、`tests/test_learning_service.py`、`docs/constraints.md`
+
 ## GitHub Issue / Project 対応表
 
 | 計画 | Issue | Phase | ステータス | 種別 |
@@ -392,11 +418,12 @@
 | N-024 DriveService Google Drive API 実装 | [#38](https://github.com/weimaraner69-crypto/test02/issues/38) | 5-Future | ✅ 完了 | Feature |
 | N-025 auth・gemini カバレッジ補強 | [#39](https://github.com/weimaraner69-crypto/test02/issues/39) | 5-Future | ✅ 完了 | QA |
 | N-026 Flask セッション管理 | [#40](https://github.com/weimaraner69-crypto/test02/issues/40) | 5-Future | ✅ 完了 | Feature |
-| N-027 C-003 Gemini API レート制限実装 | [#47](https://github.com/weimaraner69-crypto/test02/issues/47) | 5-Future | 📋 予定 | Feature |
-| N-028 C-004 学習セッション時間制限実装 | [#48](https://github.com/weimaraner69-crypto/test02/issues/48) | 5-Future | 📋 予定 | Feature |
+| N-027 C-003 Gemini API レート制限実装 | [#47](https://github.com/weimaraner69-crypto/test02/issues/47) | 5-Future | ✅ 完了 | Feature |
+| N-028 C-004 学習セッション時間制限実装 | [#48](https://github.com/weimaraner69-crypto/test02/issues/48) | 5-Future | ✅ 完了 | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-14: N-027/N-028 完了（C-003/C-004 実装、境界値テスト追加、CI グリーン）
 - 2026-05-14: Next を再編（N-027/N-028 追加、Issue #47/#48 作成）
 - 2026-05-14: N-026 完了（PR #46 マージ、GET /login と POST /login 分離、セッション管理強化、CI グリーン）
 - 2026-05-14: N-025 完了（PR #45 マージ、auth 100% / gemini 92%、CI グリーン）
@@ -406,10 +433,6 @@
 - 2026-05-05: N-021〜N-023 実装完了（PR #41/#42/#43 作成、CI 全グリーン、リリースマネージャー approve、マージ順序 #41→#42→#43）
 - 2026-05-05: N-024〜N-026 を Next に是格昇格（DriveService 実装・カバレッジ補強・Flask セッション）
 - 2026-05-04: N-021〜N-026 を計画（Next 3件 + Backlog 3件。仕様先行：N-021 constraints.md → N-022 FR-030 → N-023 Gemini 実 API）
-- 2026-05-04: N-020 完了（requirements / architecture / runbook に TOKEN_PATH とトークン再利用仕様を反映）
-- 2026-05-04: N-014〜N-019 完了（PR #28〜#33 マージ、225 passed / 91.88%）
-- 2026-05-04: N-012 完了（docs Markdown lint 整理、`docs/plan.md` / `docs/runbook.md` diagnostics 0件）
-- 2026-05-04: N-011 完了（PR #18 マージ、Google OAuth 本実装、209 passed / 92.89%）、N-012 を Next に昇格
 - 2026-05-02: N-008〜N-010 Next 追加、B-002 Backlog 追加（GitHub Issues #11〜#14 作成）
 - 2026-05-02: N-007 完了（子供向け学習機能、PR #10 マージ、178 passed / 97.30%）
 - 2026-05-02: B-001 → N-007 昇格（子供向け学習機能、Phase 4 Advanced 着手）

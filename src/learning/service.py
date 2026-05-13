@@ -4,10 +4,11 @@
 
 from __future__ import annotations
 
+import time
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from src.core.exceptions import ValidationError
+from src.core.exceptions import RateLimitError, ValidationError
 from src.domain.learning import LearningContent, Subject, get_content, validate_grade
 from src.observability.tracing import trace_llm_call
 
@@ -24,6 +25,12 @@ def _topic_key(subject: Subject, topic: str) -> str:
 class LearningService:
     """学習機能の統合サービス。"""
 
+    _RATE_LIMIT_WINDOW_SECONDS = 60
+    _USER_RATE_LIMIT_PER_MIN = 10
+    _GLOBAL_RATE_LIMIT_PER_MIN = 50
+    _SESSION_WARN_SECONDS = 3600
+    _SESSION_FORCE_STOP_SECONDS = 7200
+
     def __init__(
         self,
         profile_service: UserProfileService,
@@ -31,6 +38,60 @@ class LearningService:
     ) -> None:
         self._profile = profile_service
         self._gemini = gemini_service
+        self._user_call_timestamps: dict[str, list[float]] = {}
+        self._global_call_timestamps: list[float] = []
+        self._session_started_at: dict[str, float] = {}
+
+    @staticmethod
+    def _prune_old_timestamps(timestamps: list[float], now: float, window: int) -> list[float]:
+        """ウィンドウ外のタイムスタンプを除外する。"""
+        return [ts for ts in timestamps if now - ts <= window]
+
+    def _check_rate_limit(self, uid: str, now: float) -> None:
+        """C-003: ユーザー単位/全体単位のレート制限を検証する。"""
+        user_calls = self._prune_old_timestamps(
+            self._user_call_timestamps.get(uid, []),
+            now,
+            self._RATE_LIMIT_WINDOW_SECONDS,
+        )
+        global_calls = self._prune_old_timestamps(
+            self._global_call_timestamps,
+            now,
+            self._RATE_LIMIT_WINDOW_SECONDS,
+        )
+
+        self._user_call_timestamps[uid] = user_calls
+        self._global_call_timestamps = global_calls
+
+        if len(user_calls) >= self._USER_RATE_LIMIT_PER_MIN:
+            raise RateLimitError(
+                "レート制限に達しました。しばらく時間をおいてから再試行してください。",
+                reason_code="C003_rate_limit_exceeded",
+            )
+        if len(global_calls) >= self._GLOBAL_RATE_LIMIT_PER_MIN:
+            raise RateLimitError(
+                "現在アクセスが集中しています。しばらく時間をおいてから再試行してください。",
+                reason_code="C003_rate_limit_exceeded",
+            )
+
+        self._user_call_timestamps[uid].append(now)
+        self._global_call_timestamps.append(now)
+
+    def _check_session_duration(self, uid: str, now: float) -> None:
+        """C-004: セッション継続時間を検証する。"""
+        started_at = self._session_started_at.setdefault(uid, now)
+        elapsed_seconds = now - started_at
+
+        if elapsed_seconds > self._SESSION_FORCE_STOP_SECONDS:
+            raise ValidationError(
+                "学習セッションが120分を超えました。進捗を保存して再開してください。",
+                reason_code="C004_session_timeout",
+            )
+        if elapsed_seconds > self._SESSION_WARN_SECONDS:
+            raise ValidationError(
+                "学習セッションが60分を超えました。休憩してから再開してください。",
+                reason_code="C004_session_timeout",
+            )
 
     def get_content_for_grade(self, grade: int, subject: Subject) -> LearningContent | None:
         """学年と科目に対応するコンテンツを返す。"""
@@ -48,6 +109,9 @@ class LearningService:
         # subject バリデーション
         if not isinstance(subject, Subject):
             raise ValidationError(f"subject は Subject 型で指定してください: {subject!r}")
+        now = time.time()
+        self._check_session_duration(uid, now)
+        self._check_rate_limit(uid, now)
         result = self._gemini.generate_question(
             context=f"{subject.value} {topic}",
             topic=topic,

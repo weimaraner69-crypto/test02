@@ -34,3 +34,11 @@ class ValidationError(DomainError):
     def __init__(self, message: str = "", reason_code: str | None = None) -> None:
         super().__init__(message)
         self.reason_code = reason_code
+
+
+class RateLimitError(DomainError):
+    """レート制限超過。"""
+
+    def __init__(self, message: str = "", reason_code: str | None = None) -> None:
+        super().__init__(message)
+        self.reason_code = reason_code
