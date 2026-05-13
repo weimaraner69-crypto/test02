@@ -10,7 +10,7 @@
 
 - フェーズ：**Advanced**（N-001〜N-025 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-025 マージ完了、N-026 自動実行継続（2026-05-14）
+- 直近の重要決定：N-026 完了。Next を N-027/N-028 に再編（2026-05-14）
 
 ## ロードマップ（概略）
 
@@ -32,8 +32,8 @@
 
 ## Next（自動実行対象：最大3件）
 
-1. **N-026** Flask セッション管理（SECRET_KEY 環境変数・スッションハイジャック対策）
-2. （空き）
+1. **N-027** C-003 Gemini API レート制限実装（1ユーザー10 req/min、全体50 req/min）
+2. **N-028** C-004 学習セッション時間制限実装（警告60分、強制終了120分）
 3. （空き）
 
 ## Backlog（保留）
@@ -392,9 +392,12 @@
 | N-024 DriveService Google Drive API 実装 | [#38](https://github.com/weimaraner69-crypto/test02/issues/38) | 5-Future | ✅ 完了 | Feature |
 | N-025 auth・gemini カバレッジ補強 | [#39](https://github.com/weimaraner69-crypto/test02/issues/39) | 5-Future | ✅ 完了 | QA |
 | N-026 Flask セッション管理 | [#40](https://github.com/weimaraner69-crypto/test02/issues/40) | 5-Future | ✅ 完了 | Feature |
+| N-027 C-003 Gemini API レート制限実装 | [#47](https://github.com/weimaraner69-crypto/test02/issues/47) | 5-Future | 📋 予定 | Feature |
+| N-028 C-004 学習セッション時間制限実装 | [#48](https://github.com/weimaraner69-crypto/test02/issues/48) | 5-Future | 📋 予定 | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-14: Next を再編（N-027/N-028 追加、Issue #47/#48 作成）
 - 2026-05-14: N-026 完了（PR #46 マージ、GET /login と POST /login 分離、セッション管理強化、CI グリーン）
 - 2026-05-14: N-025 完了（PR #45 マージ、auth 100% / gemini 92%、CI グリーン）
 - 2026-05-14: N-024 完了（PR #44 マージ、Copilot 指摘3件対応、CI グリーン）
@@ -405,7 +408,6 @@
 - 2026-05-04: N-021〜N-026 を計画（Next 3件 + Backlog 3件。仕様先行：N-021 constraints.md → N-022 FR-030 → N-023 Gemini 実 API）
 - 2026-05-04: N-020 完了（requirements / architecture / runbook に TOKEN_PATH とトークン再利用仕様を反映）
 - 2026-05-04: N-014〜N-019 完了（PR #28〜#33 マージ、225 passed / 91.88%）
-- 2026-05-04: N-013 完了（requirements / architecture を Google OAuth 本実装に整合、docs diagnostics 0件）
 - 2026-05-04: N-012 完了（docs Markdown lint 整理、`docs/plan.md` / `docs/runbook.md` diagnostics 0件）
 - 2026-05-04: N-011 完了（PR #18 マージ、Google OAuth 本実装、209 passed / 92.89%）、N-012 を Next に昇格
 - 2026-05-02: N-008〜N-010 Next 追加、B-002 Backlog 追加（GitHub Issues #11〜#14 作成）
