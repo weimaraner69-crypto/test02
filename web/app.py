@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 import os
 
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, jsonify, redirect, render_template_string, session, url_for
 from src.auth.service import AuthService
 from src.core.config import AppConfig
 from src.core.exceptions import (
@@ -22,7 +22,23 @@ from src.user.profile import UserProfileService
 
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+
+def create_app() -> Flask:
+    """Flask アプリを生成して返す。SECRET_KEY 未設定時は起動エラーとする。"""
+    secret_key = os.environ.get("SECRET_KEY", "")
+    if not secret_key:
+        raise RuntimeError("SECRET_KEY が未設定です。起動前に環境変数を設定してください。")
+
+    flask_app = Flask(__name__)
+    flask_app.config["SECRET_KEY"] = secret_key
+    flask_app.config["SESSION_COOKIE_HTTPONLY"] = True
+    flask_app.config["SESSION_COOKIE_SECURE"] = True
+    flask_app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+    return flask_app
+
+
+app = create_app()
 
 
 @app.route("/health")
@@ -33,18 +49,21 @@ def health() -> tuple:
 
 @app.route("/")
 def index():
-    """メインページ。認証 → プロファイル取得 → Gemini 問題生成を実行する。"""
+    """メインページ。ログイン済みセッションを前提に問題生成を実行する。"""
+    if "uid" not in session:
+        return redirect(url_for("login"))
+
     config = AppConfig.from_env()
     profile_service: UserProfileService | None = None
     try:
-        # 認証
-        auth = AuthService(mode=config.auth_mode)
-        user = auth.sign_in_with_google()
-        if user is None:
-            raise AuthenticationError("サインインに失敗しました")
-
         # プロファイル管理
         profile_service = UserProfileService(db_path=config.database_path)
+        user = {
+            "uid": session["uid"],
+            "email": session.get("email", ""),
+            "displayName": session.get("display_name", ""),
+            "isNewUser": False,
+        }
         profile_service.set_profile(user["uid"], user)
         profile = profile_service.get_profile(user["uid"])
 
@@ -67,14 +86,65 @@ def index():
             profile=profile,
             question=question,
         )
-    except (AuthenticationError, AuthorizationError, ValidationError, DomainError) as e:
-        logger.error("エラー発生: %s", e)
-        return render_template_string("<h1>エラー</h1><p>{{ msg }}</p>", msg=str(e)), 500
+    except (
+        AuthenticationError,
+        AuthorizationError,
+        ValidationError,
+        DomainError,
+        RuntimeError,
+        OSError,
+        ConnectionError,
+        TimeoutError,
+    ):
+        logger.exception("index 処理中にエラーが発生")
+        return render_template_string(
+            "<h1>エラー</h1><p>処理中にエラーが発生しました。時間をおいて再試行してください。</p>"
+        ), 500
     finally:
         if profile_service is not None:
             profile_service.close()
 
 
+@app.route("/login")
+def login():
+    """ログイン処理を実行し、成功時はセッションを作成してトップへ遷移する。"""
+    config = AppConfig.from_env()
+    try:
+        auth = AuthService(mode=config.auth_mode)
+        user = auth.sign_in_with_google()
+        if user is None:
+            raise AuthenticationError("サインインに失敗しました")
+
+        # ログイン時は既存セッションを破棄して新しいセッション情報のみ保持する
+        session.clear()
+        session["uid"] = user["uid"]
+        session["email"] = user.get("email", "")
+        session["display_name"] = user.get("displayName", "")
+        return redirect(url_for("index"))
+    except (
+        AuthenticationError,
+        AuthorizationError,
+        ValidationError,
+        DomainError,
+        RuntimeError,
+        OSError,
+        ConnectionError,
+        TimeoutError,
+    ):
+        logger.exception("login 処理中にエラーが発生")
+        return render_template_string(
+            "<h1>エラー</h1><p>ログイン処理でエラーが発生しました。設定を確認してください。</p>"
+        ), 500
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    """セッションを破棄してログインページへ遷移する。"""
+    session.clear()
+    return redirect(url_for("login"))
+
+
 if __name__ == "__main__":
     debug = os.environ.get("FLASK_DEBUG", "0") == "1"
-    app.run(debug=debug, host="0.0.0.0", port=5001)
+    host = os.environ.get("FLASK_HOST", "127.0.0.1")
+    app.run(debug=debug, host=host, port=5001)
