@@ -5,6 +5,7 @@ MiraStudy CLI統合アプリ（雛形）
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from src.auth.service import AuthService
 from src.core.config import AppConfig
@@ -90,7 +91,7 @@ def main() -> None:
     try:
         # AUTH_MODE に応じた認証サービスを初期化する
         auth = AuthService(mode=config.auth_mode, token_path=config.token_path)
-        user = auth.sign_in_with_google()
+        user: dict[str, Any] | None = auth.sign_in_with_google()
         if user is None:
             raise AuthenticationError("サインインに失敗しました")
         logger.info("ログイン成功")
@@ -98,23 +99,23 @@ def main() -> None:
         # プロファイル管理
         profile_service = UserProfileService(db_path=config.database_path)
         profile_service.set_profile(user["uid"], user)
-        profile = profile_service.get_profile(user["uid"])
+        profile: dict[str, Any] | None = profile_service.get_profile(user["uid"])
         logger.info("プロファイルを保存しました")
 
         # 権限判定: VIEW_KNOWLEDGE がなければ処理を停止する
         # profile が None は異常状態（フェイルクローズ P-010）
         if profile is None:
             raise AuthorizationError("プロファイルが取得できません。アクセスを拒否します。")
-        role = profile.get("role", "student")
+        role: str = profile.get("role", "student")  # type: ignore[assignment]
         if not has_permission(role, Permission.VIEW_KNOWLEDGE):
             raise AuthorizationError(f"ロール '{role}' は VIEW_KNOWLEDGE 権限を持っていません")
         logger.info("知識共有フォルダ閲覧権限あり")
 
         # Drive連携
         drive = DriveService(service=_build_drive_resource(config.auth_mode))
-        pdfs = drive.list_pdfs_in_folder(config.drive_folder_id)
+        pdfs: list[dict[str, str]] = drive.list_pdfs_in_folder(config.drive_folder_id)
         logger.info("PDF一覧: %s", pdfs)
-        meta = drive.get_metadata(config.drive_folder_id, config.gemini_topic)
+        meta: dict[str, Any] | None = drive.get_metadata(config.drive_folder_id, config.gemini_topic)
         logger.info("metadata: %s", meta)
 
         # GeminiService 初期化（LearningService に注入する）
@@ -134,7 +135,7 @@ def main() -> None:
         logger.info("学習問題を生成しました")
 
         learning.record_answer(user["uid"], Subject.MATH, topic_key, is_correct=True)
-        summary = learning.get_progress_summary(user["uid"], Subject.MATH)
+        summary: dict[str, Any] = learning.get_progress_summary(user["uid"], Subject.MATH)
         logger.info("進捗サマリー: %s", summary)
 
     except AuthenticationError as e:

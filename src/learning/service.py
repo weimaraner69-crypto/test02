@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from src.core.exceptions import ValidationError
 from src.domain.learning import LearningContent, Subject, get_content, validate_grade
@@ -37,7 +37,7 @@ class LearningService:
         return get_content(subject, grade)
 
     @trace_llm_call(model_name="gemini")
-    def generate_question(self, uid: str, grade: int, subject: Subject, topic: str) -> dict:
+    def generate_question(self, uid: str, grade: int, subject: Subject, topic: str) -> dict[str, Any]:
         """Gemini で問題を生成して返す。
         生成結果が None の場合は ValidationError を送出する。
         """
@@ -92,7 +92,7 @@ class LearningService:
                 f"学習進捗の保存に失敗しました: uid={uid}, subject={subject.value}, topic={topic}"
             )
 
-    def get_progress_summary(self, uid: str, subject: Subject) -> dict:
+    def get_progress_summary(self, uid: str, subject: Subject) -> dict[str, Any]:
         """科目全体の進捗サマリーを返す。
         対象科目のすべての topic を取得し、正答率・総問題数・正解数を集計する。
         """

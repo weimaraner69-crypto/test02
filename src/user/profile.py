@@ -9,6 +9,7 @@ import logging
 import sqlite3
 from contextlib import suppress
 from pathlib import Path
+from typing import Any
 
 from src.core.exceptions import ValidationError
 
@@ -64,14 +65,14 @@ class UserProfileService:
         """DB 接続をクローズする。呼び出し側が明示的に管理する。"""
         self._connection.close()
 
-    def _deserialize_payload(self, payload: str) -> dict:
+    def _deserialize_payload(self, payload: str) -> dict[str, Any]:
         """保存済み JSON を dict に復元する。"""
         try:
             return json.loads(payload)
         except json.JSONDecodeError as error:
             raise ValidationError("保存済みデータが破損しています") from error
 
-    def get_profile(self, uid: str) -> dict | None:
+    def get_profile(self, uid: str) -> dict[str, Any] | None:
         """
         ユーザープロファイル取得
         """
@@ -83,7 +84,7 @@ class UserProfileService:
             return None
         return self._deserialize_payload(row[0])
 
-    def set_profile(self, uid: str, profile: dict) -> bool:
+    def set_profile(self, uid: str, profile: dict[str, Any]) -> bool:
         """
         ユーザープロファイル保存/更新
         """

@@ -9,6 +9,7 @@ import logging
 import os
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from src.observability.tracing import trace_agent_operation
 
@@ -31,7 +32,7 @@ class AuthService:
         self._token_path = token_path if self._mode is not AuthMode.MOCK else None
 
     @trace_agent_operation("auth.sign_in")
-    def sign_in_with_google(self) -> dict | None:
+    def sign_in_with_google(self) -> dict[str, Any] | None:
         """
         Googleアカウントでログインする。
         - MOCK モード: テスト用固定ユーザーを返す

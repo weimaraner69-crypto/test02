@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import re
+from typing import Any
 
 from src.core.exceptions import AuthorizationError, ValidationError
 
@@ -48,7 +49,7 @@ class DriveService:
             )
         self._service = service
 
-    def list_pdfs_in_folder(self, folder_id: str) -> list[dict]:
+    def list_pdfs_in_folder(self, folder_id: str) -> list[dict[str, str]]:
         """FR-030: 指定フォルダ内の PDF ファイル一覧を取得する。
 
         Args:
@@ -84,7 +85,7 @@ class DriveService:
         files = result.get("files", [])
         return [{"id": f["id"], "name": f["name"]} for f in files]
 
-    def get_metadata(self, folder_id: str, subject: str) -> dict | None:
+    def get_metadata(self, folder_id: str, subject: str) -> dict[str, Any] | None:
         """FR-031: フォルダ内の metadata.json を取得し、subject が一致する場合に返す。
 
         Args:
