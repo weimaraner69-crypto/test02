@@ -22,6 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # スキャン対象ディレクトリ（プロジェクトに合わせて変更）
 SCAN_DIRS = [
     REPO_ROOT / "src",
+    REPO_ROOT / "web",
     REPO_ROOT / "tests",
     REPO_ROOT / "scripts",
     REPO_ROOT / ".github",
