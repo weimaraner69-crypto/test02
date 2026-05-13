@@ -293,7 +293,7 @@
   - [x] C-003（API レート制限）：Gemini API 呼び出しのレート制限仕様（1ユーザー 10 req/min、全体 50 req/min）が定義されている
   - [x] C-004（セッション時間制限）：学習セッション時間制限仕様（警告 60 分、強制終了 120 分）が定義されている
   - [x] 各制約が `docs/constraints.md` の正式フォーマットで記述されている
-  - [ ] `get_errors` で diagnostics が 0 件である
+  - [x] `get_errors` で diagnostics が 0 件である
 - 依存：N-020
 - 触る領域：`docs/constraints.md`
 
@@ -306,7 +306,7 @@
   - [ ] 入力（`folder_id`）・出力（`list[dict]`）・失敗時挙動が明記されている
   - [ ] FR-031 として「`metadata.json` 取得」要件を追加
   - [ ] `docs/architecture.md` の `drive/` 責務を FR-030/031 に整合させる
-  - [ ] `get_errors` で diagnostics が 0 件である
+  - [x] `get_errors` で diagnostics が 0 件である
 - 依存：N-021
 - 触る領域：`docs/requirements.md`、`docs/architecture.md`
 
