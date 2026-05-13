@@ -9,6 +9,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+from src.core.exceptions import RateLimitError, ValidationError
 
 # create_app のモジュール初期化用。テスト専用のダミー値を設定する。
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
@@ -75,8 +76,8 @@ def test_login_page_returns_form(client) -> None:
 
 def test_login_creates_session_and_index_returns_200(client) -> None:
     """POST /login でログイン後はセッションが維持され、/ で 200 を返す。"""
-    with patch("web.app.GeminiService") as mock_gemini_cls:
-        mock_gemini_cls.return_value.generate_question.return_value = {
+    with patch("web.app.LearningService") as mock_learning_cls:
+        mock_learning_cls.return_value.generate_question.return_value = {
             "question": {"text": "dummy"}
         }
         login_response = client.post("/login", follow_redirects=False)
@@ -89,6 +90,32 @@ def test_login_creates_session_and_index_returns_200(client) -> None:
         response = client.get("/", follow_redirects=False)
         assert response.status_code == 200
         assert b"MiraStudy Web" in response.data
+
+
+def test_index_returns_429_on_rate_limit_error(client) -> None:
+    """C-003 の RateLimitError 発生時は 429 を返す。"""
+    client.post("/login", follow_redirects=False)
+    with patch("web.app.LearningService") as mock_learning_cls:
+        mock_learning_cls.return_value.generate_question.side_effect = RateLimitError(
+            "rate limit",
+            reason_code="C003_rate_limit_exceeded",
+        )
+        response = client.get("/", follow_redirects=False)
+    assert response.status_code == 429
+    assert "アクセス制限" in response.data.decode("utf-8")
+
+
+def test_index_returns_429_on_session_timeout_validation_error(client) -> None:
+    """C-004 の ValidationError(reason_code) 発生時は 429 を返す。"""
+    client.post("/login", follow_redirects=False)
+    with patch("web.app.LearningService") as mock_learning_cls:
+        mock_learning_cls.return_value.generate_question.side_effect = ValidationError(
+            "session timeout",
+            reason_code="C004_session_timeout",
+        )
+        response = client.get("/", follow_redirects=False)
+    assert response.status_code == 429
+    assert "休憩のお願い" in response.data.decode("utf-8")
 
 
 def test_logout_clears_session_and_redirects_to_login(client) -> None:

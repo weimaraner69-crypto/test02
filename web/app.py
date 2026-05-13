@@ -15,9 +15,12 @@ from src.core.exceptions import (
     AuthenticationError,
     AuthorizationError,
     DomainError,
+    RateLimitError,
     ValidationError,
 )
+from src.domain.learning import Subject
 from src.gemini.service import GeminiService
+from src.learning.service import LearningService
 from src.user.profile import UserProfileService
 
 logger = logging.getLogger(__name__)
@@ -67,10 +70,14 @@ def index():
         profile_service.set_profile(user["uid"], user)
         profile = profile_service.get_profile(user["uid"])
 
-        # 問題生成
+        # 問題生成（LearningService 経由で C-003/C-004 を適用）
         gemini = GeminiService(api_key=config.api_key)
-        question = gemini.generate_question(
-            "PDFコンテキスト", config.gemini_topic, config.gemini_grade
+        learning = LearningService(profile_service=profile_service, gemini_service=gemini)
+        question = learning.generate_question(
+            uid=user["uid"],
+            grade=config.gemini_grade,
+            subject=Subject.MATH,
+            topic=config.gemini_topic,
         )
 
         html = """
@@ -86,10 +93,24 @@ def index():
             profile=profile,
             question=question,
         )
+    except RateLimitError:
+        logger.exception("index 処理中にレート制限を検知")
+        return render_template_string(
+            "<h1>アクセス制限</h1><p>アクセスが集中しています。しばらく時間をおいて再試行してください。</p>"
+        ), 429
+    except ValidationError as e:
+        if e.reason_code == "C004_session_timeout":
+            logger.exception("index 処理中にセッション時間制限を検知")
+            return render_template_string(
+                "<h1>休憩のお願い</h1><p>学習セッションの時間上限に達しました。休憩してから再開してください。</p>"
+            ), 429
+        logger.exception("index 処理中に検証エラーが発生")
+        return render_template_string(
+            "<h1>エラー</h1><p>処理中にエラーが発生しました。時間をおいて再試行してください。</p>"
+        ), 500
     except (
         AuthenticationError,
         AuthorizationError,
-        ValidationError,
         DomainError,
         RuntimeError,
         OSError,

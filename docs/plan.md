@@ -391,6 +391,19 @@
 - 依存：N-027
 - 触る領域：`src/learning/service.py`、`tests/test_learning_service.py`、`docs/constraints.md`
 
+### N-029 Web: C-004 セッション警告/停止の表示反映
+
+- **✅ 完了（2026-05-14）**
+- 目的：Web 画面で C-004 セッション時間制限および C-003 レート制限を利用者向けメッセージとして返却する
+- 受入条件：
+  - [x] `web/app.py` が `LearningService.generate_question()` を利用する
+  - [x] `C004_session_timeout` を検知して利用者向けメッセージを 429 で返す
+  - [x] `C003_rate_limit_exceeded` を検知して利用者向けメッセージを 429 で返す
+  - [x] `tests/test_web_app.py` に検証テストを追加
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-028
+- 触る領域：`web/app.py`、`tests/test_web_app.py`
+
 ## GitHub Issue / Project 対応表
 
 | 計画 | Issue | Phase | ステータス | 種別 |
@@ -420,9 +433,11 @@
 | N-026 Flask セッション管理 | [#40](https://github.com/weimaraner69-crypto/test02/issues/40) | 5-Future | ✅ 完了 | Feature |
 | N-027 C-003 Gemini API レート制限実装 | [#47](https://github.com/weimaraner69-crypto/test02/issues/47) | 5-Future | ✅ 完了 | Feature |
 | N-028 C-004 学習セッション時間制限実装 | [#48](https://github.com/weimaraner69-crypto/test02/issues/48) | 5-Future | ✅ 完了 | Feature |
+| N-029 Web: C-004 セッション警告/停止の表示反映 | [#49](https://github.com/weimaraner69-crypto/test02/issues/49) | 5-Future | ✅ 完了 | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-14: N-029 完了（Web で C-003/C-004 の利用者向け 429 応答を実装、CI グリーン）
 - 2026-05-14: N-027/N-028 完了（C-003/C-004 実装、境界値テスト追加、CI グリーン）
 - 2026-05-14: Next を再編（N-027/N-028 追加、Issue #47/#48 作成）
 - 2026-05-14: N-026 完了（PR #46 マージ、GET /login と POST /login 分離、セッション管理強化、CI グリーン）
@@ -432,9 +447,3 @@
 - 2026-05-05: N-021 ・ N-022 マージ完了（PR #41/#42）、N-023 PR #43 レビュー対応済み・マージ待ち
 - 2026-05-05: N-021〜N-023 実装完了（PR #41/#42/#43 作成、CI 全グリーン、リリースマネージャー approve、マージ順序 #41→#42→#43）
 - 2026-05-05: N-024〜N-026 を Next に是格昇格（DriveService 実装・カバレッジ補強・Flask セッション）
-- 2026-05-04: N-021〜N-026 を計画（Next 3件 + Backlog 3件。仕様先行：N-021 constraints.md → N-022 FR-030 → N-023 Gemini 実 API）
-- 2026-05-02: N-008〜N-010 Next 追加、B-002 Backlog 追加（GitHub Issues #11〜#14 作成）
-- 2026-05-02: N-007 完了（子供向け学習機能、PR #10 マージ、178 passed / 97.30%）
-- 2026-05-02: B-001 → N-007 昇格（子供向け学習機能、Phase 4 Advanced 着手）
-- 2026-05-02: N-006 完了（SQLite 永続化、runbook/architecture 更新、140 passed / 97.12%）
-- 2026-05-02: N-005 完了（認証モード切り替え、RBAC、PR #8 マージ、128 passed / 96.83%）
