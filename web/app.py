@@ -153,7 +153,7 @@ def login():
 def logout():
     """セッションを破棄してログインページへ遷移する。"""
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("login"), code=303)
 
 
 if __name__ == "__main__":

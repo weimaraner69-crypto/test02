@@ -27,11 +27,19 @@ def client():
             "SECRET_KEY": "test-secret-key",
         },
     ):
-        flask_app.config["TESTING"] = True
-        # テストクライアントは HTTP 扱いのため Secure Cookie は無効化して検証する
-        flask_app.config["SESSION_COOKIE_SECURE"] = False
-        with flask_app.test_client() as client:
-            yield client
+        # 元の設定を保存
+        original_testing = flask_app.config.get("TESTING", False)
+        original_secure = flask_app.config.get("SESSION_COOKIE_SECURE", True)
+        try:
+            flask_app.config["TESTING"] = True
+            # テストクライアントは HTTP 扱いのため Secure Cookie は無効化して検証する
+            flask_app.config["SESSION_COOKIE_SECURE"] = False
+            with flask_app.test_client() as client:
+                yield client
+        finally:
+            # 設定をリセットして副作用を防ぐ
+            flask_app.config["TESTING"] = original_testing
+            flask_app.config["SESSION_COOKIE_SECURE"] = original_secure
 
 
 def test_health_endpoint(client) -> None:
@@ -90,7 +98,7 @@ def test_logout_clears_session_and_redirects_to_login(client) -> None:
         assert "uid" in sess
 
     logout_response = client.post("/logout", follow_redirects=False)
-    assert logout_response.status_code == 302
+    assert logout_response.status_code == 303
     assert "/login" in logout_response.headers["Location"]
 
     with client.session_transaction() as sess:
