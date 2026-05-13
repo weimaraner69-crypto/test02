@@ -60,6 +60,16 @@ class UserProfileService:
                 )
                 """
             )
+            self._connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS learning_runtime_state (
+                    uid TEXT NOT NULL,
+                    state_key TEXT NOT NULL,
+                    state_json TEXT NOT NULL,
+                    PRIMARY KEY (uid, state_key)
+                )
+                """
+            )
 
     def close(self) -> None:
         """DB 接続をクローズする。呼び出し側が明示的に管理する。"""
@@ -136,6 +146,29 @@ class UserProfileService:
                 self._logger.warning("学習進捗データ破損: uid=%s", uid)
                 continue
         return result
+
+    def get_runtime_state(self, uid: str, state_key: str) -> dict[str, Any] | None:
+        """学習ランタイム状態を取得する。"""
+        row = self._connection.execute(
+            "SELECT state_json FROM learning_runtime_state WHERE uid = ? AND state_key = ?",
+            (uid, state_key),
+        ).fetchone()
+        if row is None:
+            return None
+        return self._deserialize_payload(row[0])
+
+    def set_runtime_state(self, uid: str, state_key: str, state: dict[str, Any]) -> bool:
+        """学習ランタイム状態を保存/更新する。"""
+        with self._connection:
+            self._connection.execute(
+                """
+                INSERT INTO learning_runtime_state (uid, state_key, state_json)
+                VALUES (?, ?, ?)
+                ON CONFLICT(uid, state_key) DO UPDATE SET state_json = excluded.state_json
+                """,
+                (uid, state_key, json.dumps(state, ensure_ascii=False)),
+            )
+        return True
 
     def add_family_member(self, admin_uid: str, member_uid: str, member_profile: dict) -> bool:
         """家族メンバーを追加する。自分自身（admin_uid == member_uid）は登録不可。"""

@@ -166,3 +166,26 @@ def test_learning_service_generate_question_works_with_decorator() -> None:
         result = svc.generate_question("uid_001", 1, Subject.MATH, "足し算")
     assert result["question"]["text"] == "算数問題"
     profile.close()
+
+
+def test_constraint_metrics_increment_and_reset() -> None:
+    """C-003/C-004 イベントメトリクスが加算・初期化されることを確認する。"""
+    from src.observability.tracing import (
+        get_constraint_metrics,
+        record_constraint_event,
+        reset_constraint_metrics,
+    )
+
+    reset_constraint_metrics()
+    record_constraint_event("c003_user_limit", "u1")
+    record_constraint_event("c004_session_warning", "u1")
+    record_constraint_event("c004_session_warning", "u2")
+
+    metrics = get_constraint_metrics()
+    assert metrics["c003_user_limit"] == 1
+    assert metrics["c004_session_warning"] == 2
+
+    reset_constraint_metrics()
+    reset_metrics = get_constraint_metrics()
+    assert reset_metrics["c003_user_limit"] == 0
+    assert reset_metrics["c004_session_warning"] == 0

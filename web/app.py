@@ -99,11 +99,16 @@ def index():
             "<h1>アクセス制限</h1><p>アクセスが集中しています。しばらく時間をおいて再試行してください。</p>"
         ), 429
     except ValidationError as e:
-        if e.reason_code == "C004_session_timeout":
+        if e.reason_code == "C004_session_warning":
             logger.exception("index 処理中にセッション時間制限を検知")
             return render_template_string(
                 "<h1>休憩のお願い</h1><p>学習セッションの時間上限に達しました。休憩してから再開してください。</p>"
             ), 429
+        if e.reason_code == "C004_session_forced_stop":
+            logger.exception("index 処理中にセッション強制停止を検知")
+            return render_template_string(
+                "<h1>セッション終了</h1><p>学習セッションが長時間に達したため終了しました。再ログインして再開してください。</p>"
+            ), 403
         logger.exception("index 処理中に検証エラーが発生")
         return render_template_string(
             "<h1>エラー</h1><p>処理中にエラーが発生しました。時間をおいて再試行してください。</p>"

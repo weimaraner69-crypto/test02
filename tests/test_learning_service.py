@@ -4,7 +4,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from src.core.exceptions import RateLimitError, ValidationError
@@ -222,7 +224,7 @@ def test_generate_question_session_time_warn_over_3600_seconds_rejected(svc_with
             pytest.raises(ValidationError, match="60分を超えました") as exc_info,
         ):
             service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
-    assert exc_info.value.reason_code == "C004_session_timeout"
+    assert exc_info.value.reason_code == "C004_session_warning"
 
 
 def test_generate_question_session_time_force_stop_over_7200_seconds_rejected(svc_with_uid) -> None:
@@ -236,4 +238,62 @@ def test_generate_question_session_time_force_stop_over_7200_seconds_rejected(sv
             pytest.raises(ValidationError, match="120分を超えました") as exc_info,
         ):
             service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
-    assert exc_info.value.reason_code == "C004_session_timeout"
+    assert exc_info.value.reason_code == "C004_session_forced_stop"
+
+
+def test_generate_question_rate_limit_persists_after_service_restart() -> None:
+    """N-031: サービス再生成後もユーザー単位レート制限が維持される。"""
+    db_path = Path("data") / f"learning_runtime_{uuid4().hex}.sqlite"
+    uid = "restart-user-001"
+
+    profile1 = UserProfileService(str(db_path))
+    profile1.set_profile(uid, {"uid": uid, "role": "student"})
+    service1 = LearningService(profile_service=profile1, gemini_service=GeminiService("test-key"))
+
+    with (
+        patch.object(service1._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=3000.0),
+    ):
+        for _ in range(10):
+            service1.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+    profile1.close()
+
+    profile2 = UserProfileService(str(db_path))
+    service2 = LearningService(profile_service=profile2, gemini_service=GeminiService("test-key"))
+    with (
+        patch.object(service2._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=3000.0),
+        pytest.raises(RateLimitError, match="しばらく時間をおいて") as exc_info,
+    ):
+        service2.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+    assert exc_info.value.reason_code == "C003_rate_limit_exceeded"
+    profile2.close()
+    db_path.unlink(missing_ok=True)
+
+
+def test_generate_question_session_state_persists_after_service_restart() -> None:
+    """N-031: サービス再生成後もセッション開始時刻が維持され、警告判定が一貫する。"""
+    db_path = Path("data") / f"learning_session_{uuid4().hex}.sqlite"
+    uid = "restart-user-002"
+
+    profile1 = UserProfileService(str(db_path))
+    profile1.set_profile(uid, {"uid": uid, "role": "student"})
+    service1 = LearningService(profile_service=profile1, gemini_service=GeminiService("test-key"))
+    with (
+        patch.object(service1._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=1000.0),
+    ):
+        service1.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+    profile1.close()
+
+    profile2 = UserProfileService(str(db_path))
+    service2 = LearningService(profile_service=profile2, gemini_service=GeminiService("test-key"))
+    with (
+        patch.object(service2._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=4601.0),
+        pytest.raises(ValidationError, match="60分を超えました") as exc_info,
+    ):
+        service2.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+    assert exc_info.value.reason_code == "C004_session_warning"
+    profile2.close()
+    db_path.unlink(missing_ok=True)

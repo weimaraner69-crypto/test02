@@ -63,7 +63,7 @@
 - 判定②：全ユーザー合計の Gemini API 呼び出しが 60 秒以内に 50 回を超えた場合に発動
 - 理由コード：`C003_rate_limit_exceeded`
 
-> **注記**: N-027 にて実装済み。`LearningService.generate_question()` 呼び出し時にユーザー単位（10 req/min）と全体単位（50 req/min）を検証し、超過時は `RateLimitError(reason_code="C003_rate_limit_exceeded")` を送出する。
+> **注記**: N-027/N-031 にて実装済み。`LearningService.generate_question()` 呼び出し時にユーザー単位（10 req/min）と全体単位（50 req/min）を検証し、超過時は `RateLimitError(reason_code="C003_rate_limit_exceeded")` を送出する。レート履歴は `learning_runtime_state` に永続化される。
 
 #### C-003 閾値定義
 
@@ -80,11 +80,11 @@
 | 警告しきい値 | 60 分（3600 秒） | 子供の集中力と疲労を考慮した警告タイミング |
 | 強制終了しきい値 | 120 分（7200 秒） | 長時間利用を防ぐための強制終了タイミング |
 
-- 判定①：継続時間が 60 分を超えた場合に警告を発動（セッションは継続）
+- 判定①：継続時間が 60 分を超えた場合に警告を発動（新規問題生成を一時停止）
 - 判定②：継続時間が 120 分を超えた場合に強制終了を発動
-- 理由コード：`C004_session_timeout`
+- 理由コード：`C004_session_warning`（警告） / `C004_session_forced_stop`（強制終了）
 
-> **注記**: N-028 にて実装済み。`LearningService.generate_question()` 呼び出し時にセッション継続時間を検証し、60分超過時は警告（`ValidationError`）、120分超過時は強制終了（`ValidationError(reason_code="C004_session_timeout")`）を発動する。
+> **注記**: N-028/N-030/N-031 にて実装済み。`LearningService.generate_question()` 呼び出し時にセッション継続時間を検証し、60分超過時は `ValidationError(reason_code="C004_session_warning")`、120分超過時は `ValidationError(reason_code="C004_session_forced_stop")` を送出する。セッション開始時刻は `learning_runtime_state` に永続化される。
 
 #### C-004 閾値定義
 

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from src.core.exceptions import RateLimitError, ValidationError
 from src.domain.learning import LearningContent, Subject, get_content, validate_grade
-from src.observability.tracing import trace_llm_call
+from src.observability.tracing import record_constraint_event, trace_llm_call
 
 if TYPE_CHECKING:
     from src.gemini.service import GeminiService
@@ -30,6 +30,9 @@ class LearningService:
     _GLOBAL_RATE_LIMIT_PER_MIN = 50
     _SESSION_WARN_SECONDS = 3600
     _SESSION_FORCE_STOP_SECONDS = 7200
+    _RUNTIME_RATE_KEY = "rate_calls"
+    _RUNTIME_SESSION_KEY = "session_started_at"
+    _GLOBAL_RUNTIME_UID = "__global__"
 
     def __init__(
         self,
@@ -38,9 +41,6 @@ class LearningService:
     ) -> None:
         self._profile = profile_service
         self._gemini = gemini_service
-        self._user_call_timestamps: dict[str, list[float]] = {}
-        self._global_call_timestamps: list[float] = []
-        self._session_started_at: dict[str, float] = {}
 
     @staticmethod
     def _prune_old_timestamps(timestamps: list[float], now: float, window: int) -> list[float]:
@@ -49,48 +49,69 @@ class LearningService:
 
     def _check_rate_limit(self, uid: str, now: float) -> None:
         """C-003: ユーザー単位/全体単位のレート制限を検証する。"""
+        user_state = self._profile.get_runtime_state(uid, self._RUNTIME_RATE_KEY) or {"calls": []}
+        global_state = self._profile.get_runtime_state(
+            self._GLOBAL_RUNTIME_UID, self._RUNTIME_RATE_KEY
+        ) or {"calls": []}
+
         user_calls = self._prune_old_timestamps(
-            self._user_call_timestamps.get(uid, []),
+            user_state.get("calls", []),
             now,
             self._RATE_LIMIT_WINDOW_SECONDS,
         )
         global_calls = self._prune_old_timestamps(
-            self._global_call_timestamps,
+            global_state.get("calls", []),
             now,
             self._RATE_LIMIT_WINDOW_SECONDS,
         )
 
-        self._user_call_timestamps[uid] = user_calls
-        self._global_call_timestamps = global_calls
-
         if len(user_calls) >= self._USER_RATE_LIMIT_PER_MIN:
+            record_constraint_event("c003_user_limit", uid)
             raise RateLimitError(
                 "レート制限に達しました。しばらく時間をおいてから再試行してください。",
                 reason_code="C003_rate_limit_exceeded",
             )
         if len(global_calls) >= self._GLOBAL_RATE_LIMIT_PER_MIN:
+            record_constraint_event("c003_global_limit", uid)
             raise RateLimitError(
                 "現在アクセスが集中しています。しばらく時間をおいてから再試行してください。",
                 reason_code="C003_rate_limit_exceeded",
             )
 
-        self._user_call_timestamps[uid].append(now)
-        self._global_call_timestamps.append(now)
+        user_calls.append(now)
+        global_calls.append(now)
+        self._profile.set_runtime_state(uid, self._RUNTIME_RATE_KEY, {"calls": user_calls})
+        self._profile.set_runtime_state(
+            self._GLOBAL_RUNTIME_UID,
+            self._RUNTIME_RATE_KEY,
+            {"calls": global_calls},
+        )
 
     def _check_session_duration(self, uid: str, now: float) -> None:
         """C-004: セッション継続時間を検証する。"""
-        started_at = self._session_started_at.setdefault(uid, now)
+        session_state = self._profile.get_runtime_state(uid, self._RUNTIME_SESSION_KEY)
+        if session_state is None:
+            started_at = now
+            self._profile.set_runtime_state(
+                uid,
+                self._RUNTIME_SESSION_KEY,
+                {"started_at": started_at},
+            )
+        else:
+            started_at = float(session_state.get("started_at", now))
         elapsed_seconds = now - started_at
 
         if elapsed_seconds > self._SESSION_FORCE_STOP_SECONDS:
+            record_constraint_event("c004_session_forced_stop", uid)
             raise ValidationError(
                 "学習セッションが120分を超えました。進捗を保存して再開してください。",
-                reason_code="C004_session_timeout",
+                reason_code="C004_session_forced_stop",
             )
         if elapsed_seconds > self._SESSION_WARN_SECONDS:
+            record_constraint_event("c004_session_warning", uid)
             raise ValidationError(
                 "学習セッションが60分を超えました。休憩してから再開してください。",
-                reason_code="C004_session_timeout",
+                reason_code="C004_session_warning",
             )
 
     def get_content_for_grade(self, grade: int, subject: Subject) -> LearningContent | None:

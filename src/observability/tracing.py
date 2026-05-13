@@ -24,6 +24,39 @@ from typing import ParamSpec, TypeVar
 
 logger = logging.getLogger(__name__)
 
+# 制約イベントの簡易メトリクス（プロセス内集計）
+_constraint_event_counts: dict[str, int] = {
+    "c003_user_limit": 0,
+    "c003_global_limit": 0,
+    "c004_session_warning": 0,
+    "c004_session_forced_stop": 0,
+}
+
+
+def record_constraint_event(event_name: str, uid: str | None = None) -> None:
+    """制約イベントを記録する。"""
+    if event_name not in _constraint_event_counts:
+        _constraint_event_counts[event_name] = 0
+    _constraint_event_counts[event_name] += 1
+    logger.warning(
+        "constraint_event name=%s uid=%s count=%d",
+        event_name,
+        uid or "-",
+        _constraint_event_counts[event_name],
+    )
+
+
+def get_constraint_metrics() -> dict[str, int]:
+    """制約イベントの現在カウントを返す。"""
+    return dict(_constraint_event_counts)
+
+
+def reset_constraint_metrics() -> None:
+    """制約イベントメトリクスを初期化する。"""
+    for key in list(_constraint_event_counts.keys()):
+        _constraint_event_counts[key] = 0
+
+
 # ---------------------------------------------------------------------------
 # 型変数（ParamSpec + TypeVar で mypy strict / Pylance 互換）
 # ---------------------------------------------------------------------------

@@ -158,6 +158,30 @@ uv run python ci/policy_check.py
 
 ## 失敗時対応
 
+### C-003 / C-004 制約イベント監視
+
+C-003（レート制限）/ C-004（セッション時間制限）の発生状況は、
+`src.observability.tracing.record_constraint_event` により構造化ログへ記録される。
+
+確認ポイント:
+
+- `constraint_event name=c003_user_limit`：ユーザー単位レート超過
+- `constraint_event name=c003_global_limit`：全体レート超過
+- `constraint_event name=c004_session_warning`：60分超過警告
+- `constraint_event name=c004_session_forced_stop`：120分超過強制停止
+
+メトリクス確認（ローカル）:
+
+```bash
+.venv/bin/python -c "from src.observability.tracing import get_constraint_metrics; print(get_constraint_metrics())"
+```
+
+一次対応:
+
+1. `c003_*` が急増している場合はアクセス集中を疑い、短時間のリトライ制御を強化する
+2. `c004_session_warning` が継続する場合は利用者に休憩を促す UI 表示を確認する
+3. `c004_session_forced_stop` が多発する場合はセッション導線（再開導線）を確認する
+
 ### CI 失敗
 
 1. GitHub Actions のログで失敗箇所を特定する

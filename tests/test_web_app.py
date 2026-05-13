@@ -105,17 +105,30 @@ def test_index_returns_429_on_rate_limit_error(client) -> None:
     assert "アクセス制限" in response.data.decode("utf-8")
 
 
-def test_index_returns_429_on_session_timeout_validation_error(client) -> None:
-    """C-004 の ValidationError(reason_code) 発生時は 429 を返す。"""
+def test_index_returns_429_on_session_warning_validation_error(client) -> None:
+    """C-004 警告発生時は 429 を返す。"""
     client.post("/login", follow_redirects=False)
     with patch("web.app.LearningService") as mock_learning_cls:
         mock_learning_cls.return_value.generate_question.side_effect = ValidationError(
             "session timeout",
-            reason_code="C004_session_timeout",
+            reason_code="C004_session_warning",
         )
         response = client.get("/", follow_redirects=False)
     assert response.status_code == 429
     assert "休憩のお願い" in response.data.decode("utf-8")
+
+
+def test_index_returns_403_on_session_forced_stop_validation_error(client) -> None:
+    """C-004 強制停止発生時は 403 を返す。"""
+    client.post("/login", follow_redirects=False)
+    with patch("web.app.LearningService") as mock_learning_cls:
+        mock_learning_cls.return_value.generate_question.side_effect = ValidationError(
+            "session forced stop",
+            reason_code="C004_session_forced_stop",
+        )
+        response = client.get("/", follow_redirects=False)
+    assert response.status_code == 403
+    assert "セッション終了" in response.data.decode("utf-8")
 
 
 def test_logout_clears_session_and_redirects_to_login(client) -> None:
