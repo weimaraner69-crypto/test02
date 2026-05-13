@@ -58,13 +58,20 @@ def test_unauthenticated_index_redirects_to_login(client) -> None:
     assert "/login" in response.headers["Location"]
 
 
+def test_login_page_returns_form(client) -> None:
+    """GET /login でログイン画面を表示する。"""
+    response = client.get("/login", follow_redirects=False)
+    assert response.status_code == 200
+    assert "<h1>" in response.data.decode("utf-8")
+
+
 def test_login_creates_session_and_index_returns_200(client) -> None:
-    """ログイン後はセッションが維持され、/ で 200 を返す。"""
+    """POST /login でログイン後はセッションが維持され、/ で 200 を返す。"""
     with patch("web.app.GeminiService") as mock_gemini_cls:
         mock_gemini_cls.return_value.generate_question.return_value = {
             "question": {"text": "dummy"}
         }
-        login_response = client.get("/login", follow_redirects=False)
+        login_response = client.post("/login", follow_redirects=False)
         assert login_response.status_code == 302
         assert "/" in login_response.headers["Location"]
 
@@ -78,7 +85,7 @@ def test_login_creates_session_and_index_returns_200(client) -> None:
 
 def test_logout_clears_session_and_redirects_to_login(client) -> None:
     """ログアウトでセッションを破棄し、再度 / は /login へリダイレクトする。"""
-    client.get("/login", follow_redirects=False)
+    client.post("/login", follow_redirects=False)
     with client.session_transaction() as sess:
         assert "uid" in sess
 
@@ -105,9 +112,9 @@ def test_session_cookie_security_flags_enabled() -> None:
 
 
 def test_login_returns_500_on_auth_failure(client) -> None:
-    """/login で sign_in_with_google が None の場合は 500 を返す。"""
+    """POST /login で sign_in_with_google が None の場合は 500 を返す。"""
     with patch("web.app.AuthService") as mock_auth_cls:
         mock_auth = mock_auth_cls.return_value
         mock_auth.sign_in_with_google.return_value = None
-        response = client.get("/login")
+        response = client.post("/login")
     assert response.status_code == 500

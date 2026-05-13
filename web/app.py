@@ -105,7 +105,19 @@ def index():
             profile_service.close()
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET"])
+def login_page():
+    """ログイン画面を表示する。"""
+    html = (
+        "<h1>ログイン</h1>"
+        "<form method='POST' action='/login'>"
+        "<button type='submit'>Google でログイン</button>"
+        "</form>"
+    )
+    return render_template_string(html), 200
+
+
+@app.route("/login", methods=["POST"])
 def login():
     """ログイン処理を実行し、成功時はセッションを作成してトップへ遷移する。"""
     config = AppConfig.from_env()
