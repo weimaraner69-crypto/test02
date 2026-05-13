@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-024 完了）
+- フェーズ：**Advanced**（N-001〜N-025 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-024 マージ完了、N-025〜N-026 自動実行継続（2026-05-14）
+- 直近の重要決定：N-025 マージ完了、N-026 自動実行継続（2026-05-14）
 
 ## ロードマップ（概略）
 
@@ -32,8 +32,8 @@
 
 ## Next（自動実行対象：最大3件）
 
-1. **N-025** auth/gemini カバレッジ補強（auth 81%、gemini 65% → 90%+）
-2. **N-026** Flask セッション管理（SECRET_KEY 環境変数・スッションハイジャック対策）
+1. **N-026** Flask セッション管理（SECRET_KEY 環境変数・スッションハイジャック対策）
+2. （空き）
 3. （空き）
 
 ## Backlog（保留）
@@ -340,14 +340,14 @@
 
 ### N-025 auth・gemini カバレッジ補強
 
-- **📋 予定（Backlog）**
+- **✅ 完了（2026-05-14）**
 - 目的：カバレッジが低い `src/auth/service.py`（81%）と `src/gemini/service.py`（65%）のテストを補強し、90% 以上にする
 - 受入条件：
-  - [ ] `auth/service.py` の line 60-62、88-92、118-120、129-130、141-143 をカバーするテストを追加
-  - [ ] `gemini/service.py` の line 35-36、49-57 をカバーするテストを追加
-  - [ ] `src/auth/service.py` カバレッジ 90% 以上
-  - [ ] `src/gemini/service.py` カバレッジ 85% 以上
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] `auth/service.py` の line 60-62、88-92、118-120、129-130、141-143 をカバーするテストを追加
+  - [x] `gemini/service.py` の line 35-36、49-57 をカバーするテストを追加
+  - [x] `src/auth/service.py` カバレッジ 90% 以上
+  - [x] `src/gemini/service.py` カバレッジ 85% 以上
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-024
 - 触る領域：`tests/test_auth_service.py`、`tests/test_gemini_service.py`
 
@@ -390,11 +390,12 @@
 | N-022 FR-030 Drive 連携要件定義 | [#36](https://github.com/weimaraner69-crypto/test02/issues/36) | 5-Future | ✅ 完了 | Maintenance |
 | N-023 GeminiService 実 API 接続 | [#37](https://github.com/weimaraner69-crypto/test02/issues/37) | 5-Future | ✅ 完了 | Feature |
 | N-024 DriveService Google Drive API 実装 | [#38](https://github.com/weimaraner69-crypto/test02/issues/38) | 5-Future | ✅ 完了 | Feature |
-| N-025 auth・gemini カバレッジ補強 | [#39](https://github.com/weimaraner69-crypto/test02/issues/39) | 5-Future | 📋 予定 | QA |
+| N-025 auth・gemini カバレッジ補強 | [#39](https://github.com/weimaraner69-crypto/test02/issues/39) | 5-Future | ✅ 完了 | QA |
 | N-026 Flask セッション管理 | [#40](https://github.com/weimaraner69-crypto/test02/issues/40) | 5-Future | 📋 予定 | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-14: N-025 完了（PR #45 マージ、auth 100% / gemini 92%、CI グリーン）
 - 2026-05-14: N-024 完了（PR #44 マージ、Copilot 指摘3件対応、CI グリーン）
 - 2026-05-05: N-023 マージ完了（PR #43）、N-024〜N-026 自動実行開始
 - 2026-05-05: N-021 ・ N-022 マージ完了（PR #41/#42）、N-023 PR #43 レビュー対応済み・マージ待ち
