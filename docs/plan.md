@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-023 完了）
+- フェーズ：**Advanced**（N-001〜N-024 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-021〜N-023 マージ完了、N-024〜N-026 自動実行開始（2026-05-05）
+- 直近の重要決定：N-024 マージ完了、N-025〜N-026 自動実行継続（2026-05-14）
 
 ## ロードマップ（概略）
 
@@ -32,9 +32,9 @@
 
 ## Next（自動実行対象：最大3件）
 
-1. **N-024** DriveService Google Drive API 実装（N-021/022/023 マージ済み）
-2. **N-025** auth/gemini カバレッジ補強（auth 81%、gemini 65% → 90%+）
-3. **N-026** Flask セッション管理（SECRET_KEY 環境変数・スッションハイジャック対策）
+1. **N-025** auth/gemini カバレッジ補強（auth 81%、gemini 65% → 90%+）
+2. **N-026** Flask セッション管理（SECRET_KEY 環境変数・スッションハイジャック対策）
+3. （空き）
 
 ## Backlog（保留）
 
@@ -326,15 +326,15 @@
 
 ### N-024 DriveService Google Drive API 実装
 
-- **📋 予定（Backlog）**
+- **✅ 完了（2026-05-14）**
 - 目的：`DriveService` のスタブを `google-api-python-client` で置き換え、実際の Google Drive から PDF 一覧・`metadata.json` を取得できるようにする
 - 受入条件：
-  - [ ] `google-api-python-client>=2.0` を `pyproject.toml` に追加
-  - [ ] `list_pdfs_in_folder(folder_id)` が Drive API `files.list` を呼び出す
-  - [ ] `get_metadata(folder_id, subject)` が Drive API 経由で `metadata.json` を取得・パースする
-  - [ ] CI では Drive API をモックし、テストが通過する
-  - [ ] FR-030/031 受入条件をすべて満たす
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] `google-api-python-client>=2.0` を `pyproject.toml` に追加
+  - [x] `list_pdfs_in_folder(folder_id)` が Drive API `files.list` を呼び出す
+  - [x] `get_metadata(folder_id, subject)` が Drive API 経由で `metadata.json` を取得・パースする
+  - [x] CI では Drive API をモックし、テストが通過する
+  - [x] FR-030/031 受入条件をすべて満たす
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-023
 - 触る領域：`src/drive/service.py`、`tests/test_drive_service.py`、`pyproject.toml`
 
@@ -389,12 +389,13 @@
 | N-021 constraints.md プロジェクト固有制約定義 | [#35](https://github.com/weimaraner69-crypto/test02/issues/35) | 5-Future | ✅ 完了 | Maintenance |
 | N-022 FR-030 Drive 連携要件定義 | [#36](https://github.com/weimaraner69-crypto/test02/issues/36) | 5-Future | ✅ 完了 | Maintenance |
 | N-023 GeminiService 実 API 接続 | [#37](https://github.com/weimaraner69-crypto/test02/issues/37) | 5-Future | ✅ 完了 | Feature |
-| N-024 DriveService Google Drive API 実装 | [#38](https://github.com/weimaraner69-crypto/test02/issues/38) | 5-Future | 📋 予定 | Feature |
+| N-024 DriveService Google Drive API 実装 | [#38](https://github.com/weimaraner69-crypto/test02/issues/38) | 5-Future | ✅ 完了 | Feature |
 | N-025 auth・gemini カバレッジ補強 | [#39](https://github.com/weimaraner69-crypto/test02/issues/39) | 5-Future | 📋 予定 | QA |
 | N-026 Flask セッション管理 | [#40](https://github.com/weimaraner69-crypto/test02/issues/40) | 5-Future | 📋 予定 | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-14: N-024 完了（PR #44 マージ、Copilot 指摘3件対応、CI グリーン）
 - 2026-05-05: N-023 マージ完了（PR #43）、N-024〜N-026 自動実行開始
 - 2026-05-05: N-021 ・ N-022 マージ完了（PR #41/#42）、N-023 PR #43 レビュー対応済み・マージ待ち
 - 2026-05-05: N-021〜N-023 実装完了（PR #41/#42/#43 作成、CI 全グリーン、リリースマネージャー approve、マージ順序 #41→#42→#43）
