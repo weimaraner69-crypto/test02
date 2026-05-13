@@ -115,7 +115,9 @@ def main() -> None:
         drive = DriveService(service=_build_drive_resource(config.auth_mode))
         pdfs: list[dict[str, str]] = drive.list_pdfs_in_folder(config.drive_folder_id)
         logger.info("PDF一覧: %s", pdfs)
-        meta: dict[str, Any] | None = drive.get_metadata(config.drive_folder_id, config.gemini_topic)
+        meta: dict[str, Any] | None = drive.get_metadata(
+            config.drive_folder_id, config.gemini_topic
+        )
         logger.info("metadata: %s", meta)
 
         # GeminiService 初期化（LearningService に注入する）

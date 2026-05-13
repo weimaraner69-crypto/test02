@@ -302,10 +302,10 @@
 - **✅ 完了（2026-05-05）**
 - 目的：`docs/requirements.md` に空欄のままの FR-030 を定義し、`DriveService` 実装の仕様基盤を作る
 - 受入条件：
-  - [ ] FR-030 に「Google Drive 共有フォルダから PDF 一覧を取得する」機能要件を記述
-  - [ ] 入力（`folder_id`）・出力（`list[dict]`）・失敗時挙動が明記されている
-  - [ ] FR-031 として「`metadata.json` 取得」要件を追加
-  - [ ] `docs/architecture.md` の `drive/` 責務を FR-030/031 に整合させる
+  - [x] FR-030 に「Google Drive 共有フォルダから PDF 一覧を取得する」機能要件を記述
+  - [x] 入力（`folder_id`）・出力（`list[dict]`）・失敗時挙動が明記されている
+  - [x] FR-031 として「`metadata.json` 取得」要件を追加
+  - [x] `docs/architecture.md` の `drive/` 責務を FR-030/031 に整合させる
   - [x] `get_errors` で diagnostics が 0 件である
 - 依存：N-021
 - 触る領域：`docs/requirements.md`、`docs/architecture.md`
@@ -315,12 +315,12 @@
 - **✅ 完了（2026-05-05）**
 - 目的：`GeminiService` のスタブ実装を `google-generativeai` SDK で置き換え、実際の Gemini API で問題を生成できるようにする
 - 受入条件：
-  - [ ] `google-generativeai>=0.7` を `pyproject.toml` に追加
-  - [ ] `GeminiService.__init__` で `genai.configure(api_key=self.api_key)` を呼び出す
-  - [ ] `generate_question` が `genai.GenerativeModel.generate_content()` で JSON レスポンスを返す
-  - [ ] CI では `genai` モジュールをモックし、既存リトライロジックが通過する
-  - [ ] `src/gemini/service.py` のカバレッジが 85% 以上になる
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] `google-generativeai>=0.7` を `pyproject.toml` に追加
+  - [x] `GeminiService.__init__` で `genai.configure(api_key=self.api_key)` を呼び出す
+  - [x] `generate_question` が `genai.GenerativeModel.generate_content()` で JSON レスポンスを返す
+  - [x] CI では `genai` モジュールをモックし、既存リトライロジックが通過する
+  - [x] `src/gemini/service.py` のカバレッジが 85% 以上になる
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-022
 - 触る領域：`src/gemini/service.py`、`tests/test_gemini_service.py`、`pyproject.toml`
 

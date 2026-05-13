@@ -37,7 +37,9 @@ class LearningService:
         return get_content(subject, grade)
 
     @trace_llm_call(model_name="gemini")
-    def generate_question(self, uid: str, grade: int, subject: Subject, topic: str) -> dict[str, Any]:
+    def generate_question(
+        self, uid: str, grade: int, subject: Subject, topic: str
+    ) -> dict[str, Any]:
         """Gemini で問題を生成して返す。
         生成結果が None の場合は ValidationError を送出する。
         """
