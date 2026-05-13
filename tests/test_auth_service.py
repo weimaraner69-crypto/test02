@@ -54,13 +54,15 @@ def test_google_mode_without_credentials_raises_value_error() -> None:
     """
     GOOGLE モードで GOOGLE_CLIENT_ID / SECRET が未設定の場合、ValueError を送出する。
     """
-    import os
-
     auth = AuthService(mode="google")
-    # 環境変数が未設定であることを確認（テスト環境では未設定）
-    if not os.environ.get("GOOGLE_CLIENT_ID") or not os.environ.get("GOOGLE_CLIENT_SECRET"):
-        with pytest.raises(ValueError):
-            auth.sign_in_with_google()
+    with (
+        patch.dict(
+            os.environ,
+            {"GOOGLE_CLIENT_ID": "", "GOOGLE_CLIENT_SECRET": ""},
+        ),
+        pytest.raises(ValueError),
+    ):
+        auth.sign_in_with_google()
 
 
 def test_invalid_mode_raises_value_error() -> None:
@@ -72,20 +74,53 @@ def test_invalid_mode_raises_value_error() -> None:
 # ---- N-011 Google OAuth テスト ----
 
 
-def test_google_mode_returns_credentials_cached() -> None:
+def test_google_mode_returns_credentials_cached(tmp_path: Path) -> None:
     """
-    GOOGLE モードで sign_in_with_google() が実装されていることを確認する。
-    ただし実際の web サーバー起動はスキップするため、
-    環境変数未設定時の ValueError で実装確認とする。
+    GOOGLE モードで認証成功時に _token_cache が設定されることを確認する。
     """
-    import os
+    import sys
 
-    auth = AuthService(mode="google")
+    token_file = tmp_path / "token.json"
 
-    # 環境変数が未設定の場合、ValueError が発生
-    if not os.environ.get("GOOGLE_CLIENT_ID") or not os.environ.get("GOOGLE_CLIENT_SECRET"):
-        with pytest.raises(ValueError, match="Google OAuth 認証情報が未設定"):
-            auth.sign_in_with_google()
+    mock_creds = MagicMock()
+    mock_creds.valid = True
+    mock_creds.to_json.return_value = json.dumps({"token": "dummy"})
+
+    mock_user_info = {
+        "id": "google_uid_cache",
+        "email": "cache@example.com",
+        "name": "キャッシュ確認",
+    }
+    mock_googleapiclient = MagicMock()
+    mock_service = MagicMock()
+    mock_service.userinfo().get().execute.return_value = mock_user_info
+    mock_googleapiclient.discovery.build.return_value = mock_service
+
+    mock_flow = MagicMock()
+    mock_flow.run_local_server.return_value = mock_creds
+
+    with (
+        patch.dict(
+            os.environ,
+            {"GOOGLE_CLIENT_ID": "dummy_id", "GOOGLE_CLIENT_SECRET": "dummy_secret"},
+        ),
+        patch.dict(
+            sys.modules,
+            {
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+            },
+        ),
+        patch(
+            "google_auth_oauthlib.flow.InstalledAppFlow.from_client_config", return_value=mock_flow
+        ),
+    ):
+        auth = AuthService(mode="google", token_path=str(token_file))
+        user = auth.sign_in_with_google()
+
+    assert user is not None
+    assert user["uid"] == "google_uid_cache"
+    assert auth._token_cache is mock_creds
 
 
 # ---- ヘルパー関数 ----
@@ -203,3 +238,177 @@ def test_google_mode_with_valid_token_file_skips_browser_auth(tmp_path: Path) ->
     mock_flow_cls.assert_not_called()
     assert result is not None
     assert result["uid"] == "google_uid_001"
+
+
+def test_google_mode_import_error_raises_runtime_error() -> None:
+    """google_auth_oauthlib が未インストールの場合に RuntimeError を送出する。"""
+    import builtins
+
+    original_import = builtins.__import__
+
+    with (
+        patch.dict(
+            os.environ,
+            {"GOOGLE_CLIENT_ID": "dummy_id", "GOOGLE_CLIENT_SECRET": "dummy_secret"},
+        ),
+        patch("builtins.__import__") as mock_import,
+    ):
+
+        def _import_side_effect(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "google_auth_oauthlib.flow":
+                raise ImportError("missing google_auth_oauthlib")
+            return original_import(name, globals, locals, fromlist, level)
+
+        mock_import.side_effect = _import_side_effect
+        auth = AuthService(mode="google")
+        with pytest.raises(RuntimeError, match="未インストール"):
+            auth.sign_in_with_google()
+
+
+def test_google_mode_invalid_token_file_falls_back_to_browser_auth(tmp_path: Path) -> None:
+    """トークン読込失敗時は警告後に再認証へフォールバックする。"""
+    import sys
+
+    token_file = tmp_path / "token.json"
+    token_file.write_text("invalid", encoding="utf-8")
+
+    mock_creds = MagicMock()
+    mock_creds.valid = True
+    mock_creds.to_json.return_value = json.dumps({"token": "dummy"})
+
+    mock_user_info = {"id": "google_uid_002", "email": "user@example.com", "name": "再認証"}
+    mock_googleapiclient = MagicMock()
+    mock_service = MagicMock()
+    mock_service.userinfo().get().execute.return_value = mock_user_info
+    mock_googleapiclient.discovery.build.return_value = mock_service
+
+    mock_flow = MagicMock()
+    mock_flow.run_local_server.return_value = mock_creds
+
+    with (
+        patch.dict(
+            os.environ,
+            {"GOOGLE_CLIENT_ID": "dummy_id", "GOOGLE_CLIENT_SECRET": "dummy_secret"},
+        ),
+        patch.dict(
+            sys.modules,
+            {
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+            },
+        ),
+        patch(
+            "google_auth_oauthlib.flow.InstalledAppFlow.from_client_config", return_value=mock_flow
+        ),
+        patch(
+            "google.oauth2.credentials.Credentials.from_authorized_user_file",
+            side_effect=Exception("broken token"),
+        ),
+    ):
+        auth = AuthService(mode="google", token_path=str(token_file))
+        result = auth.sign_in_with_google()
+
+    mock_flow.run_local_server.assert_called_once()
+    assert result is not None
+    assert result["uid"] == "google_uid_002"
+
+
+def test_google_mode_run_local_server_oserror_raises_runtime_error() -> None:
+    """ローカルサーバー起動失敗（OSError）時に RuntimeError を送出する。"""
+    mock_flow = MagicMock()
+    mock_flow.run_local_server.side_effect = OSError("port in use")
+
+    with (
+        patch.dict(
+            os.environ,
+            {"GOOGLE_CLIENT_ID": "dummy_id", "GOOGLE_CLIENT_SECRET": "dummy_secret"},
+        ),
+        patch(
+            "google_auth_oauthlib.flow.InstalledAppFlow.from_client_config", return_value=mock_flow
+        ),
+    ):
+        auth = AuthService(mode="google", token_path="/tmp/not-used-token.json")
+        with pytest.raises(RuntimeError, match="ローカル web サーバー起動失敗"):
+            auth.sign_in_with_google()
+
+
+def test_google_mode_token_save_failure_continues(tmp_path: Path) -> None:
+    """トークン保存失敗時も処理継続し、ユーザー情報を返す。"""
+    import sys
+
+    token_file = tmp_path / "token.json"
+    mock_creds = MagicMock()
+    mock_creds.valid = True
+    mock_creds.to_json.return_value = json.dumps({"token": "dummy"})
+
+    mock_user_info = {
+        "id": "google_uid_003",
+        "email": "user@example.com",
+        "name": "保存失敗継続",
+    }
+    mock_googleapiclient = MagicMock()
+    mock_service = MagicMock()
+    mock_service.userinfo().get().execute.return_value = mock_user_info
+    mock_googleapiclient.discovery.build.return_value = mock_service
+
+    mock_flow = MagicMock()
+    mock_flow.run_local_server.return_value = mock_creds
+
+    with (
+        patch.dict(
+            os.environ,
+            {"GOOGLE_CLIENT_ID": "dummy_id", "GOOGLE_CLIENT_SECRET": "dummy_secret"},
+        ),
+        patch.dict(
+            sys.modules,
+            {
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+            },
+        ),
+        patch(
+            "google_auth_oauthlib.flow.InstalledAppFlow.from_client_config", return_value=mock_flow
+        ),
+        patch("pathlib.Path.write_text", side_effect=OSError("disk full")),
+    ):
+        auth = AuthService(mode="google", token_path=str(token_file))
+        result = auth.sign_in_with_google()
+
+    assert result is not None
+    assert result["uid"] == "google_uid_003"
+
+
+def test_google_mode_user_info_fetch_failure_raises_runtime_error(tmp_path: Path) -> None:
+    """googleapiclient でユーザー情報取得失敗時に RuntimeError を送出する。"""
+    import sys
+
+    token_file = tmp_path / "token.json"
+    mock_creds = MagicMock()
+    mock_creds.valid = True
+    mock_creds.to_json.return_value = json.dumps({"token": "dummy"})
+
+    mock_googleapiclient = MagicMock()
+    mock_googleapiclient.discovery.build.side_effect = Exception("userinfo failed")
+
+    mock_flow = MagicMock()
+    mock_flow.run_local_server.return_value = mock_creds
+
+    with (
+        patch.dict(
+            os.environ,
+            {"GOOGLE_CLIENT_ID": "dummy_id", "GOOGLE_CLIENT_SECRET": "dummy_secret"},
+        ),
+        patch.dict(
+            sys.modules,
+            {
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+            },
+        ),
+        patch(
+            "google_auth_oauthlib.flow.InstalledAppFlow.from_client_config", return_value=mock_flow
+        ),
+    ):
+        auth = AuthService(mode="google", token_path=str(token_file))
+        with pytest.raises(RuntimeError, match="ユーザー情報取得失敗"):
+            auth.sign_in_with_google()
