@@ -21,6 +21,8 @@ from src.core.exceptions import (
 from src.domain.learning import Subject
 from src.gemini.service import GeminiService
 from src.learning.service import LearningService
+from src.observability.tracing import get_constraint_metrics, get_constraint_recent_events
+from src.permissions.roles import Permission, has_permission
 from src.user.profile import UserProfileService
 
 logger = logging.getLogger(__name__)
@@ -44,10 +46,42 @@ def create_app() -> Flask:
 app = create_app()
 
 
+def _has_metrics_admin_permission() -> bool:
+    """管理者メトリクス参照権限を判定する。"""
+    role = session.get("role", "")
+    if not isinstance(role, str):
+        return False
+    return has_permission(role, Permission.MANAGE_API_KEY)
+
+
 @app.route("/health")
 def health() -> tuple:
     """ヘルスチェックエンドポイント。認証不要。"""
     return jsonify({"status": "ok"}), 200
+
+
+@app.route("/admin/metrics/constraints", methods=["GET"])
+def admin_constraint_metrics():
+    """管理者向け: C-003/C-004 メトリクスを返す。"""
+    if "uid" not in session:
+        return redirect(url_for("login"))
+
+    if not _has_metrics_admin_permission():
+        return jsonify({"error": "forbidden"}), 403
+
+    return jsonify(get_constraint_metrics()), 200
+
+
+@app.route("/admin/metrics/constraints/history", methods=["GET"])
+def admin_constraint_metrics_history():
+    """管理者向け: C-003/C-004 制約イベント履歴を返す。"""
+    if "uid" not in session:
+        return redirect(url_for("login"))
+
+    if not _has_metrics_admin_permission():
+        return jsonify({"error": "forbidden"}), 403
+
+    return jsonify({"events": get_constraint_recent_events()}), 200
 
 
 @app.route("/")
@@ -158,6 +192,7 @@ def login():
         session["uid"] = user["uid"]
         session["email"] = user.get("email", "")
         session["display_name"] = user.get("displayName", "")
+        session["role"] = user.get("role", "student")
         return redirect(url_for("index"))
     except (
         AuthenticationError,

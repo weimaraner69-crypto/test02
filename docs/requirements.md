@@ -61,6 +61,13 @@
   - トークンファイルの読み込み失敗/破損 → 警告ログを出力して再認証にフォールバック
 - 担当モジュール：`src/auth/`、`src/permissions/`
 
+#### FR-001A 管理者メトリクス API 認可
+
+- 対象エンドポイント：`GET /admin/metrics/constraints`、`GET /admin/metrics/constraints/history`
+- 認可要件：`admin` ロールのみ参照可能（`parent` / `student` は 403）
+- 未ログイン時：`/login` へリダイレクト
+- 出力：JSON（制約メトリクス、直近イベント履歴）
+
 ### FR-010 SQLite 永続化
 
 - 入力：

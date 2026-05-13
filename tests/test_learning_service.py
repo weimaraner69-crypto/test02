@@ -297,3 +297,66 @@ def test_generate_question_session_state_persists_after_service_restart() -> Non
     assert exc_info.value.reason_code == "C004_session_warning"
     profile2.close()
     db_path.unlink(missing_ok=True)
+
+
+def test_rate_limit_is_reproducible_under_same_timestamp_inputs(svc) -> None:
+    """N-035: 同一条件の高頻度呼び出しで判定結果が再現することを確認する。"""
+    service = svc
+    uid = "repro-user-001"
+    service._profile.set_profile(uid, {"uid": uid, "role": "student"})
+
+    with (
+        patch.object(service._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=5000.0),
+    ):
+        for _ in range(10):
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+
+        with pytest.raises(RateLimitError) as first_error:
+            service.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+    assert first_error.value.reason_code == "C003_rate_limit_exceeded"
+
+    # 別インスタンスでも同一条件で同じ判定になることを確認する
+    profile2 = UserProfileService(":memory:")
+    profile2.set_profile(uid, {"uid": uid, "role": "student"})
+    service2 = LearningService(profile_service=profile2, gemini_service=GeminiService("test-key"))
+    with (
+        patch.object(service2._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=5000.0),
+    ):
+        for _ in range(10):
+            service2.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+        with pytest.raises(RateLimitError) as second_error:
+            service2.generate_question(uid, grade=3, subject=Subject.MATH, topic="わり算")
+    assert second_error.value.reason_code == "C003_rate_limit_exceeded"
+    profile2.close()
+
+
+def test_global_rate_limit_under_multi_user_burst_is_stable(svc) -> None:
+    """N-035: 複数ユーザー同時バースト時に全体レート制限判定が安定することを確認する。"""
+    service = svc
+    for i in range(60):
+        uid = f"burst-user-{i:02d}"
+        service._profile.set_profile(uid, {"uid": uid, "role": "student"})
+
+    with (
+        patch.object(service._gemini, "generate_question", return_value={"question": {}}),
+        patch("src.learning.service.time.time", return_value=7000.0),
+    ):
+        for i in range(50):
+            service.generate_question(
+                f"burst-user-{i:02d}",
+                grade=3,
+                subject=Subject.MATH,
+                topic="わり算",
+            )
+
+        with pytest.raises(RateLimitError) as error_info:
+            service.generate_question(
+                "burst-user-50",
+                grade=3,
+                subject=Subject.MATH,
+                topic="わり算",
+            )
+
+    assert error_info.value.reason_code == "C003_rate_limit_exceeded"

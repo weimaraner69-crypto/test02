@@ -189,3 +189,22 @@ def test_constraint_metrics_increment_and_reset() -> None:
     reset_metrics = get_constraint_metrics()
     assert reset_metrics["c003_user_limit"] == 0
     assert reset_metrics["c004_session_warning"] == 0
+
+
+def test_constraint_recent_events_order_and_limit() -> None:
+    """N-037: 直近イベント履歴が新しい順で取得され、上限を守ることを確認する。"""
+    from src.observability.tracing import (
+        get_constraint_recent_events,
+        record_constraint_event,
+        reset_constraint_metrics,
+    )
+
+    reset_constraint_metrics()
+    for idx in range(5):
+        record_constraint_event("c003_user_limit", f"u{idx}")
+
+    recent3 = get_constraint_recent_events(limit=3)
+    assert len(recent3) == 3
+    assert recent3[0]["uid"] == "u4"
+    assert recent3[1]["uid"] == "u3"
+    assert recent3[2]["uid"] == "u2"

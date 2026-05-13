@@ -19,8 +19,10 @@ https://opentelemetry.io/docs/specs/semconv/gen-ai/
 
 import functools
 import logging
+from collections import deque
 from collections.abc import Callable
-from typing import ParamSpec, TypeVar
+from datetime import UTC, datetime
+from typing import Any, ParamSpec, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +34,32 @@ _constraint_event_counts: dict[str, int] = {
     "c004_session_forced_stop": 0,
 }
 
+_constraint_event_users: dict[str, set[str]] = {
+    "c003_user_limit": set(),
+    "c003_global_limit": set(),
+    "c004_session_warning": set(),
+    "c004_session_forced_stop": set(),
+}
+
+_CONSTRAINT_EVENT_HISTORY_LIMIT = 200
+_constraint_event_history: deque[dict[str, str]] = deque(maxlen=_CONSTRAINT_EVENT_HISTORY_LIMIT)
+
 
 def record_constraint_event(event_name: str, uid: str | None = None) -> None:
     """制約イベントを記録する。"""
     if event_name not in _constraint_event_counts:
         _constraint_event_counts[event_name] = 0
+        _constraint_event_users[event_name] = set()
     _constraint_event_counts[event_name] += 1
+    if uid:
+        _constraint_event_users[event_name].add(uid)
+    _constraint_event_history.append(
+        {
+            "timestamp": datetime.now(tz=UTC).isoformat().replace("+00:00", "Z"),
+            "event_name": event_name,
+            "uid": uid or "-",
+        }
+    )
     logger.warning(
         "constraint_event name=%s uid=%s count=%d",
         event_name,
@@ -46,15 +68,34 @@ def record_constraint_event(event_name: str, uid: str | None = None) -> None:
     )
 
 
-def get_constraint_metrics() -> dict[str, int]:
+def get_constraint_metrics() -> dict[str, Any]:
     """制約イベントの現在カウントを返す。"""
-    return dict(_constraint_event_counts)
+    metrics: dict[str, int | dict[str, int]] = dict(_constraint_event_counts)
+    metrics["unique_users_total"] = len(
+        set().union(*_constraint_event_users.values()) if _constraint_event_users else set()
+    )
+    metrics["total_events"] = sum(_constraint_event_counts.values())
+    metrics["unique_users_by_event"] = {
+        event_name: len(users) for event_name, users in _constraint_event_users.items()
+    }
+    return metrics
 
 
 def reset_constraint_metrics() -> None:
     """制約イベントメトリクスを初期化する。"""
     for key in list(_constraint_event_counts.keys()):
         _constraint_event_counts[key] = 0
+    for key in list(_constraint_event_users.keys()):
+        _constraint_event_users[key].clear()
+    _constraint_event_history.clear()
+
+
+def get_constraint_recent_events(limit: int = 200) -> list[dict[str, str]]:
+    """制約イベントの直近履歴を新しい順で返す。"""
+    safe_limit = max(1, min(limit, _CONSTRAINT_EVENT_HISTORY_LIMIT))
+    recent = list(_constraint_event_history)[-safe_limit:]
+    recent.reverse()
+    return recent
 
 
 # ---------------------------------------------------------------------------

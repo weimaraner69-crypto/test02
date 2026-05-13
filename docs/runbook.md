@@ -182,6 +182,37 @@ C-003（レート制限）/ C-004（セッション時間制限）の発生状�
 2. `c004_session_warning` が継続する場合は利用者に休憩を促す UI 表示を確認する
 3. `c004_session_forced_stop` が多発する場合はセッション導線（再開導線）を確認する
 
+エスカレーション基準:
+
+1. **Warning**: 5分窓で `c003_global_limit >= 3` または `c004_session_forced_stop >= 1`
+2. **Critical**: 10分窓で `c003_global_limit >= 10` または `c004_session_forced_stop >= 3`
+3. Critical 発生時は運用責任者へ即時連絡し、継続する場合は一時的なアクセス抑制を検討する
+
+監視コマンド例（ローカル検証）:
+
+```bash
+.venv/bin/python -c "from src.observability.tracing import get_constraint_metrics; import json; print(json.dumps(get_constraint_metrics(), ensure_ascii=False))"
+```
+
+管理者 API レスポンス例（契約テスト対象）:
+
+```json
+{
+   "c003_user_limit": 5,
+   "c003_global_limit": 1,
+   "c004_session_warning": 2,
+   "c004_session_forced_stop": 0,
+   "total_events": 8,
+   "unique_users_total": 4,
+   "unique_users_by_event": {
+      "c003_user_limit": 3,
+      "c003_global_limit": 1,
+      "c004_session_warning": 2,
+      "c004_session_forced_stop": 0
+   }
+}
+```
+
 ### CI 失敗
 
 1. GitHub Actions のログで失敗箇所を特定する

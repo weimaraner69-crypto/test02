@@ -9,7 +9,7 @@
 このテンプレートは以下の3つの柱でコード品質を担保する。
 
 | 柱 | ツール / 手法 | 目的 |
-|---|---|---|
+| --- | --- | --- |
 | **型安全性** | mypy strict | コンパイル時の型エラー検出 |
 | **コードスタイル** | ruff | リンティング + フォーマッティング |
 | **テスト品質** | pytest + Hypothesis | プロパティベーステストによるカバレッジ品質の向上 |
@@ -29,7 +29,7 @@
 Spec-Driven Development では、コードを書く前に各関数の **契約** を定義する。
 
 | 契約の種類 | 説明 | 記述場所 |
-|---|---|---|
+| --- | --- | --- |
 | **事前条件（Precondition）** | 関数が正しく動作するために呼び出し側が保証すべき条件 | docstring + `assert` |
 | **事後条件（Postcondition）** | 関数が正常終了した場合に保証される結果の条件 | docstring + `assert` |
 | **不変条件（Invariant）** | クラスのインスタンスが常に満たすべき条件 | docstring + `__post_init__` |
@@ -73,6 +73,7 @@ def process(entity: ExampleEntity, multiplier: float) -> float:
 ### サンプルコードの参照先
 
 型アノテーション・docstring・アサーションの記述サンプルは以下を参照:
+
 - `src/sample/example_module.py` — データクラスと契約付き関数のサンプル
 
 ---
@@ -88,7 +89,7 @@ Hypothesis フレームワークが自動的に多数の入力データを生成
 従来の Example-based testing との比較:
 
 | 観点 | Example-based | Property-based |
-|---|---|---|
+| --- | --- | --- |
 | テストケース数 | 手動で数個〜数十個 | 自動で数百〜数千個 |
 | 境界値の発見 | 開発者の経験に依存 | フレームワークが自動探索 |
 | 保守コスト | ケース追加のたびに増加 | プロパティ定義は安定 |
@@ -142,6 +143,7 @@ def test_invalid_input_rejected(value: float) -> None:
 ### サンプルテストの参照先
 
 Property-based testing の完全なサンプルは以下を参照:
+
 - `tests/test_sample_properties.py` — 事後条件・単調性・不変条件テストのサンプル
 
 ---
@@ -155,7 +157,7 @@ Property-based testing の完全なサンプルは以下を参照:
 テストが検出できないミュータントが多い場合、テストの品質（有効性）に改善の余地がある。
 
 | 用語 | 説明 |
-|---|---|
+| --- | --- |
 | **ミュータント** | ソースコードに加えた小さな変更（例: `>` を `>=` に変更） |
 | **killed** | テストがミュータントを検出した（テスト失敗） |
 | **survived** | テストがミュータントを検出できなかった（テスト成功） |
@@ -201,7 +203,7 @@ uv run mutmut show <mutant_id>
 ### ミューテーションスコアの目安
 
 | スコア | 評価 | アクション |
-|---|---|---|
+| --- | --- | --- |
 | 80% 以上 | 良好 | 維持 |
 | 60〜79% | 改善余地あり | survived ミュータントを分析し、テスト追加を検討 |
 | 60% 未満 | 要改善 | テスト戦略の見直しが必要 |
@@ -238,6 +240,19 @@ uv run pytest tests/test_sample_properties.py -q
 テンプレートでは `{{RUN_PREFIX}}` プレースホルダーが使用されており、
 `project-config.yml` の `toolchain.run_prefix` で置換される。
 
+### C-003/C-004 負荷・再現性テスト（N-035）
+
+制約判定の再現性確認として、以下のテストを継続実行する。
+
+- `tests/test_learning_service.py::test_rate_limit_is_reproducible_under_same_timestamp_inputs`
+- `tests/test_learning_service.py::test_global_rate_limit_under_multi_user_burst_is_stable`
+
+実行例:
+
+```bash
+uv run pytest -q tests/test_learning_service.py -k "reproducible or multi_user_burst"
+```
+
 ---
 
 ## 6. PyVeritas に関する注記
@@ -264,7 +279,7 @@ PyVeritas は、LLM を用いて Python コードを C にトランスパイル�
 
 ## ファイル構成
 
-```
+```text
 src/
 ├── sample/
 │   ├── __init__.py              # パッケージ初期化（空ファイル）

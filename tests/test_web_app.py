@@ -166,3 +166,111 @@ def test_login_returns_500_on_auth_failure(client) -> None:
         mock_auth.sign_in_with_google.return_value = None
         response = client.post("/login")
     assert response.status_code == 500
+
+
+def test_admin_constraint_metrics_redirects_when_unauthenticated(client) -> None:
+    """未ログインで管理者メトリクス API にアクセスした場合はログインへリダイレクトする。"""
+    response = client.get("/admin/metrics/constraints", follow_redirects=False)
+    assert response.status_code == 302
+    assert "/login" in response.headers["Location"]
+
+
+def test_admin_constraint_metrics_forbidden_for_non_admin(client) -> None:
+    """非管理者ユーザーは管理者メトリクス API にアクセスできない。"""
+    client.post("/login", follow_redirects=False)
+    with client.session_transaction() as sess:
+        sess["role"] = "student"
+
+    response = client.get("/admin/metrics/constraints", follow_redirects=False)
+    assert response.status_code == 403
+    assert response.get_json() == {"error": "forbidden"}
+
+
+def test_admin_constraint_metrics_forbidden_for_parent(client) -> None:
+    """保護者ロールも管理者メトリクス API にはアクセスできない。"""
+    client.post("/login", follow_redirects=False)
+    with client.session_transaction() as sess:
+        sess["role"] = "parent"
+
+    response = client.get("/admin/metrics/constraints", follow_redirects=False)
+    assert response.status_code == 403
+    assert response.get_json() == {"error": "forbidden"}
+
+
+def test_admin_constraint_metrics_returns_json_for_admin(client) -> None:
+    """管理者ユーザーは制約メトリクス JSON を取得できる。"""
+    client.post("/login", follow_redirects=False)
+    with client.session_transaction() as sess:
+        sess["role"] = "admin"
+
+    expected = {
+        "c003_user_limit": 1,
+        "c003_global_limit": 0,
+        "c004_session_warning": 2,
+        "c004_session_forced_stop": 0,
+        "total_events": 3,
+        "unique_users_total": 2,
+        "unique_users_by_event": {
+            "c003_user_limit": 1,
+            "c003_global_limit": 0,
+            "c004_session_warning": 2,
+            "c004_session_forced_stop": 0,
+        },
+    }
+    with patch("web.app.get_constraint_metrics", return_value=expected):
+        response = client.get("/admin/metrics/constraints", follow_redirects=False)
+
+    assert response.status_code == 200
+    assert response.get_json() == expected
+
+
+def test_admin_constraint_metrics_contract_keys_and_types(client) -> None:
+    """N-038: 管理者メトリクス API の主要スキーマを契約テストで固定する。"""
+    client.post("/login", follow_redirects=False)
+    with client.session_transaction() as sess:
+        sess["role"] = "admin"
+
+    expected = {
+        "c003_user_limit": 1,
+        "c003_global_limit": 0,
+        "c004_session_warning": 2,
+        "c004_session_forced_stop": 0,
+        "total_events": 3,
+        "unique_users_total": 2,
+        "unique_users_by_event": {
+            "c003_user_limit": 1,
+            "c003_global_limit": 0,
+            "c004_session_warning": 2,
+            "c004_session_forced_stop": 0,
+        },
+    }
+    with patch("web.app.get_constraint_metrics", return_value=expected):
+        response = client.get("/admin/metrics/constraints", follow_redirects=False)
+
+    data = response.get_json()
+    assert response.status_code == 200
+    assert set(data.keys()) == {
+        "c003_user_limit",
+        "c003_global_limit",
+        "c004_session_warning",
+        "c004_session_forced_stop",
+        "total_events",
+        "unique_users_total",
+        "unique_users_by_event",
+    }
+    assert isinstance(data["c003_user_limit"], int)
+    assert isinstance(data["unique_users_by_event"], dict)
+
+
+def test_admin_constraint_metrics_history_returns_events_for_admin(client) -> None:
+    """N-037: 管理者は制約イベント履歴 API を取得できる。"""
+    client.post("/login", follow_redirects=False)
+    with client.session_transaction() as sess:
+        sess["role"] = "admin"
+
+    history = [{"timestamp": "2026-05-14T00:00:00Z", "event_name": "c003_user_limit", "uid": "u1"}]
+    with patch("web.app.get_constraint_recent_events", return_value=history):
+        response = client.get("/admin/metrics/constraints/history", follow_redirects=False)
+
+    assert response.status_code == 200
+    assert response.get_json() == {"events": history}

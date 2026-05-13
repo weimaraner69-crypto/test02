@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-032 完了）
+- フェーズ：**Advanced**（N-001〜N-038 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-032 まで完了。Next を N-033〜N-035 に再編（2026-05-14）
+- 直近の重要決定：N-038 まで完了。Next を N-039〜N-041 に再編（2026-05-14）
 
 ## ロードマップ（概略）
 
@@ -32,9 +32,9 @@
 
 ## Next（自動実行対象：最大3件）
 
-1. **N-033** C-003/C-004 メトリクスの管理者向け可視化 API 追加
-2. **N-034** C-003/C-004 のアラート閾値定義と運用手順の標準化
-3. **N-035** C-003/C-004 高負荷時の再現試験（負荷・再現性）整備
+1. **N-039** 制約イベント履歴 API のページング対応
+2. **N-040** 制約イベント履歴の永続化（SQLite）
+3. **N-041** 管理者メトリクス API の認証監査ログ追加
 
 ## Backlog（保留）
 
@@ -444,39 +444,112 @@
 
 ### N-033 C-003/C-004 メトリクスの管理者向け可視化 API 追加
 
-- **📋 予定（Backlog）**
+- **✅ 完了（2026-05-14）**
 - 目的：運用者が C-003/C-004 の発生状況を API 経由で確認できるようにし、障害切り分けを高速化する
 - 受入条件：
-  - [ ] 管理者権限で参照可能なメトリクス API を追加する
-  - [ ] C-003/C-004 の主要カウンタを JSON で返却できる
-  - [ ] `tests/test_web_app.py` に API 応答テストを追加する
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] 管理者権限で参照可能なメトリクス API を追加する
+  - [x] C-003/C-004 の主要カウンタを JSON で返却できる
+  - [x] `tests/test_web_app.py` に API 応答テストを追加する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-032
 - 触る領域：`web/app.py`、`src/observability/`、`tests/`
 
 ### N-034 C-003/C-004 のアラート閾値定義と運用手順の標準化
 
-- **📋 予定（Backlog）**
+- **✅ 完了（2026-05-14）**
 - 目的：C-003/C-004 の監視アラート基準を定義し、一次対応を標準化する
 - 受入条件：
-  - [ ] `docs/constraints.md` に監視向けアラート閾値を定義する
-  - [ ] `docs/runbook.md` にエスカレーション条件を追記する
-  - [ ] 監視設定のサンプル手順を文書化する
-  - [ ] docs の diagnostics が 0 件である
+  - [x] `docs/constraints.md` に監視向けアラート閾値を定義する
+  - [x] `docs/runbook.md` にエスカレーション条件を追記する
+  - [x] 監視設定のサンプル手順を文書化する
+  - [x] docs の diagnostics が 0 件である
 - 依存：N-033
 - 触る領域：`docs/constraints.md`、`docs/runbook.md`
 
 ### N-035 C-003/C-004 高負荷時の再現試験（負荷・再現性）整備
 
-- **📋 予定（Backlog）**
+- **✅ 完了（2026-05-14）**
 - 目的：高負荷時でも C-003/C-004 判定が安定することを検証し、再現性を担保する
 - 受入条件：
-  - [ ] レート制限・セッション制限の負荷試験シナリオを追加する
-  - [ ] 再現性（同一条件で同一判定）を検証するテストを追加する
-  - [ ] テスト結果を `docs/quality-guide.md` に反映する
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] レート制限・セッション制限の負荷試験シナリオを追加する
+  - [x] 再現性（同一条件で同一判定）を検証するテストを追加する
+  - [x] テスト結果を `docs/quality-guide.md` に反映する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-034
 - 触る領域：`tests/`、`docs/quality-guide.md`
+
+### N-036 C-003/C-004 管理者メトリクス API の認可強化（parent/admin 分離）
+
+- **✅ 完了（2026-05-14）**
+- 目的：可観測性 API の認可を明確化し、admin のみ参照可・parent/student は拒否する
+- 受入条件：
+  - [x] `web/app.py` の管理者 API で role 判定を明確化する
+  - [x] parent/student で 403 を返すテストを追加する
+  - [x] 権限仕様を `docs/requirements.md` に追記する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-033
+- 触る領域：`web/app.py`、`tests/test_web_app.py`、`docs/requirements.md`
+
+### N-037 C-003/C-004 イベントの時系列履歴化（直近N件保持）
+
+- **✅ 完了（2026-05-14）**
+- 目的：運用時に直近の制約イベント時系列を追跡できるようにする
+- 受入条件：
+  - [x] C-003/C-004 イベントの直近履歴（時刻・event_name・uid）を保持する
+  - [x] 履歴を取得する API または関数を追加する
+  - [x] 履歴上限 N 件（例: 200）を超えた場合に古い順で破棄する
+  - [x] テストで履歴保持と上限制御を検証する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-036
+- 触る領域：`src/observability/tracing.py`、`tests/test_observability.py`
+
+### N-038 可観測性 API の契約テスト（スキーマ固定）追加
+
+- **✅ 完了（2026-05-14）**
+- 目的：管理者メトリクス API の JSON スキーマを固定化し、将来変更による破壊を防ぐ
+- 受入条件：
+  - [x] メトリクス API の必須キーを契約テストで固定化する
+  - [x] 型（int/dict など）をテストで検証する
+  - [x] 主要レスポンス例を `docs/runbook.md` に記載する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-037
+- 触る領域：`tests/test_web_app.py`、`docs/runbook.md`
+
+### N-039 制約イベント履歴 API のページング対応
+
+- **📋 予定（Backlog）**
+- 目的：履歴 API の応答サイズを制御し、運用時の取得負荷を下げる
+- 受入条件：
+  - [ ] `limit` / `offset` パラメータを追加する
+  - [ ] 境界値テスト（0、上限超過、負値）を追加する
+  - [ ] `docs/runbook.md` に利用例を追記する
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-037
+- 触る領域：`web/app.py`、`src/observability/tracing.py`、`tests/`、`docs/runbook.md`
+
+### N-040 制約イベント履歴の永続化（SQLite）
+
+- **📋 予定（Backlog）**
+- 目的：プロセス再起動後も制約イベント履歴を保持し、運用調査の再現性を高める
+- 受入条件：
+  - [ ] SQLite テーブルを追加する
+  - [ ] 履歴保存・取得を実装する
+  - [ ] 再起動後の履歴継続をテストで検証する
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-039
+- 触る領域：`src/user/profile.py`、`src/observability/`、`tests/`
+
+### N-041 管理者メトリクス API の認証監査ログ追加
+
+- **📋 予定（Backlog）**
+- 目的：管理者 API へのアクセス成功/拒否を監査可能にし、運用時の追跡性を高める
+- 受入条件：
+  - [ ] 成功アクセス・拒否アクセスを構造化ログで出力する
+  - [ ] テストでログ出力を検証する
+  - [ ] `docs/runbook.md` に監査確認手順を追記する
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-040
+- 触る領域：`web/app.py`、`tests/test_web_app.py`、`docs/runbook.md`
 
 ## GitHub Issue / Project 対応表
 
@@ -511,12 +584,22 @@
 | N-030 C-004 セッション制御の警告/強制停止を段階化 | [#50](https://github.com/weimaraner69-crypto/test02/issues/50) | 5-Future | ✅ 完了 | Feature |
 | N-031 C-003/C-004 の永続化レート・セッション追跡 | [#51](https://github.com/weimaraner69-crypto/test02/issues/51) | 5-Future | ✅ 完了 | Feature |
 | N-032 C-003/C-004 の運用可観測性（メトリクス/ログ）強化 | [#52](https://github.com/weimaraner69-crypto/test02/issues/52) | 5-Future | ✅ 完了 | Feature |
-| N-033 C-003/C-004 メトリクスの管理者向け可視化 API 追加 | [#53](https://github.com/weimaraner69-crypto/test02/issues/53) | 5-Future | 📋 予定 | Feature |
-| N-034 C-003/C-004 のアラート閾値定義と運用手順の標準化 | [#54](https://github.com/weimaraner69-crypto/test02/issues/54) | 5-Future | 📋 予定 | Maintenance |
-| N-035 C-003/C-004 高負荷時の再現試験（負荷・再現性）整備 | [#55](https://github.com/weimaraner69-crypto/test02/issues/55) | 5-Future | 📋 予定 | QA |
+| N-033 C-003/C-004 メトリクスの管理者向け可視化 API 追加 | [#53](https://github.com/weimaraner69-crypto/test02/issues/53) | 5-Future | ✅ 完了 | Feature |
+| N-034 C-003/C-004 のアラート閾値定義と運用手順の標準化 | [#54](https://github.com/weimaraner69-crypto/test02/issues/54) | 5-Future | ✅ 完了 | Maintenance |
+| N-035 C-003/C-004 高負荷時の再現試験（負荷・再現性）整備 | [#55](https://github.com/weimaraner69-crypto/test02/issues/55) | 5-Future | ✅ 完了 | QA |
+| N-036 C-003/C-004 管理者メトリクス API の認可強化（parent/admin 分離） | [#56](https://github.com/weimaraner69-crypto/test02/issues/56) | 5-Future | ✅ 完了 | Feature |
+| N-037 C-003/C-004 イベントの時系列履歴化（直近N件保持） | [#57](https://github.com/weimaraner69-crypto/test02/issues/57) | 5-Future | ✅ 完了 | Feature |
+| N-038 可観測性 API の契約テスト（スキーマ固定）追加 | [#58](https://github.com/weimaraner69-crypto/test02/issues/58) | 5-Future | ✅ 完了 | QA |
+| N-039 制約イベント履歴 API のページング対応 | [#59](https://github.com/weimaraner69-crypto/test02/issues/59) | 5-Future | 📋 予定 | Feature |
+| N-040 制約イベント履歴の永続化（SQLite） | [#60](https://github.com/weimaraner69-crypto/test02/issues/60) | 5-Future | 📋 予定 | Feature |
+| N-041 管理者メトリクス API の認証監査ログ追加 | [#61](https://github.com/weimaraner69-crypto/test02/issues/61) | 5-Future | 📋 予定 | Maintenance |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-14: N-036/N-037/N-038 完了（認可分離、イベント履歴化、API契約テストを実装）
+- 2026-05-14: Next を再編（N-039/N-040/N-041 追加、Issue #59/#60/#61 作成）
+- 2026-05-14: N-033/N-034/N-035 完了（管理者メトリクス API、監視閾値定義、負荷/再現性テストを追加）
+- 2026-05-14: Next を再編（N-036/N-037/N-038 追加）
 - 2026-05-14: N-030/N-031/N-032 完了（段階的 reason_code、永続化ランタイム状態、可観測性ログ/メトリクスを実装）
 - 2026-05-14: Next を再編（N-033/N-034/N-035 追加、Issue #53/#54/#55 作成）
 - 2026-05-14: N-030〜N-032 を計画追加（Issue #50/#51/#52 作成、Next 設定）
@@ -524,7 +607,3 @@
 - 2026-05-14: N-027/N-028 完了（C-003/C-004 実装、境界値テスト追加、CI グリーン）
 - 2026-05-14: Next を再編（N-027/N-028 追加、Issue #47/#48 作成）
 - 2026-05-14: N-026 完了（PR #46 マージ、GET /login と POST /login 分離、セッション管理強化、CI グリーン）
-- 2026-05-14: N-025 完了（PR #45 マージ、auth 100% / gemini 92%、CI グリーン）
-- 2026-05-14: N-024 完了（PR #44 マージ、Copilot 指摘3件対応、CI グリーン）
-- 2026-05-05: N-023 マージ完了（PR #43）、N-024〜N-026 自動実行開始
-- 2026-05-05: N-021 ・ N-022 マージ完了（PR #41/#42）、N-023 PR #43 レビュー対応済み・マージ待ち
