@@ -43,7 +43,7 @@ class DriveService:
         """
         if not _DRIVE_AVAILABLE:
             raise RuntimeError(
-                "google-api-python-client がインストールされていません。"
+                "google-api-python-client がインストールされていません。 "
                 "pip install google-api-python-client を実行してください。"
             )
         self._service = service
