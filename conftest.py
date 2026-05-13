@@ -9,7 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-# google-generativeai は pyproject.toml の依存に含まれ CI でもインストール済みだが、
+# google-genai は pyproject.toml の依存に含まれ CI でもインストール済みだが、
 # 外部 API を呼び出さないよう全テストでデフォルトモックを適用する。
 # 個別テストで patch(...) を使う場合はそちらが優先される。
 _DEFAULT_GENAI_RESPONSE = {
@@ -34,8 +34,11 @@ def _mock_genai_globally(monkeypatch: pytest.MonkeyPatch) -> None:
     mock_response.text = json.dumps(_DEFAULT_GENAI_RESPONSE)
     mock_response.candidates = []
 
+    mock_client = MagicMock()
+    mock_client.models.generate_content.return_value = mock_response
+
     mock_genai = MagicMock()
-    mock_genai.GenerativeModel.return_value.generate_content.return_value = mock_response
+    mock_genai.Client.return_value = mock_client
 
     monkeypatch.setattr("src.gemini.service._GENAI_AVAILABLE", True)
     monkeypatch.setattr("src.gemini.service.genai", mock_genai)

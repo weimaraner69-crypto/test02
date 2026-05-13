@@ -313,11 +313,11 @@
 ### N-023 GeminiService 実 API 接続
 
 - **✅ 完了（2026-05-05）**
-- 目的：`GeminiService` のスタブ実装を `google-generativeai` SDK で置き換え、実際の Gemini API で問題を生成できるようにする
+- 目的：`GeminiService` のスタブ実装を `google-genai` SDK で置き換え、実際の Gemini API で問題を生成できるようにする
 - 受入条件：
-  - [x] `google-generativeai>=0.7` を `pyproject.toml` に追加
-  - [x] `GeminiService.__init__` で `genai.configure(api_key=self.api_key)` を呼び出す
-  - [x] `generate_question` が `genai.GenerativeModel.generate_content()` で JSON レスポンスを返す
+  - [x] `google-genai>=0.3` を `pyproject.toml` に追加
+  - [x] `GeminiService.__init__` で `genai.Client(api_key=self.api_key)` を生成する
+  - [x] `generate_question` が `client.models.generate_content()` で JSON レスポンスを返す
   - [x] CI では `genai` モジュールをモックし、既存リトライロジックが通過する
   - [x] `src/gemini/service.py` のカバレッジが 85% 以上になる
   - [x] CI 通過（全 passed・カバレッジ 80% 以上）

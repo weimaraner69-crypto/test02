@@ -34,8 +34,9 @@ def test_generate_question_with_mock_genai():
         patch("src.gemini.service.genai") as mock_genai,
         patch("src.gemini.service._GENAI_AVAILABLE", True),
     ):
-        mock_genai.GenerativeModel.return_value.generate_content.return_value = mock_response
-        mock_genai.configure = MagicMock()
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = mock_response
+        mock_genai.Client.return_value = mock_client
         service = GeminiService(api_key="test-key")
         result = service.generate_question("PDFコンテキスト", "算数", 3)
 
@@ -56,8 +57,9 @@ def test_generate_question_safety_filter():
         patch("src.gemini.service.genai") as mock_genai,
         patch("src.gemini.service._GENAI_AVAILABLE", True),
     ):
-        mock_genai.GenerativeModel.return_value.generate_content.return_value = mock_response
-        mock_genai.configure = MagicMock()
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = mock_response
+        mock_genai.Client.return_value = mock_client
         service = GeminiService(api_key="test-key")
         with pytest.raises(ValidationError, match="安全フィルタ"):
             service.generate_question("コンテキスト", "国語", 1)
@@ -71,8 +73,9 @@ def test_generate_question_json_parse_error():
         patch("src.gemini.service.genai") as mock_genai,
         patch("src.gemini.service._GENAI_AVAILABLE", True),
     ):
-        mock_genai.GenerativeModel.return_value.generate_content.return_value = mock_response
-        mock_genai.configure = MagicMock()
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = mock_response
+        mock_genai.Client.return_value = mock_client
         service = GeminiService(api_key="test-key")
         with pytest.raises(ValidationError, match="JSON パースに失敗"):
             service.generate_question("コンテキスト", "理科", 4)
@@ -85,10 +88,9 @@ def test_generate_question_retry_on_runtime_error():
         patch("src.gemini.service._GENAI_AVAILABLE", True),
         patch("src.gemini.service.time.sleep") as mock_sleep,
     ):
-        mock_genai.configure = MagicMock()
-        mock_genai.GenerativeModel.return_value.generate_content.side_effect = RuntimeError(
-            "API 一時エラー"
-        )
+        mock_client = MagicMock()
+        mock_client.models.generate_content.side_effect = RuntimeError("API 一時エラー")
+        mock_genai.Client.return_value = mock_client
         service = GeminiService(api_key="test-key")
         with pytest.raises(RuntimeError, match="API 一時エラー"):
             service.generate_question("コンテキスト", "社会", 5)
@@ -104,10 +106,9 @@ def test_generate_question_validation_error_no_retry():
         patch("src.gemini.service._GENAI_AVAILABLE", True),
         patch("src.gemini.service.time.sleep") as mock_sleep,
     ):
-        mock_genai.configure = MagicMock()
-        mock_genai.GenerativeModel.return_value.generate_content.side_effect = ValidationError(
-            "バリデーションエラー"
-        )
+        mock_client = MagicMock()
+        mock_client.models.generate_content.side_effect = ValidationError("バリデーションエラー")
+        mock_genai.Client.return_value = mock_client
         service = GeminiService(api_key="test-key")
         with pytest.raises(ValidationError, match="バリデーションエラー"):
             service.generate_question("コンテキスト", "英語", 6)
@@ -117,14 +118,13 @@ def test_generate_question_validation_error_no_retry():
 
 
 def test_init_calls_genai_configure():
-    """__init__ で genai.configure(api_key=...) が正しいキーで呼ばれることを確認する。"""
+    """__init__ で genai.Client(api_key=...) が正しいキーで呼ばれることを確認する。"""
     with (
         patch("src.gemini.service.genai") as mock_genai,
         patch("src.gemini.service._GENAI_AVAILABLE", True),
     ):
-        mock_genai.configure = MagicMock()
         GeminiService(api_key="my-secret-key")
-        mock_genai.configure.assert_called_once_with(api_key="my-secret-key")
+        mock_genai.Client.assert_called_once_with(api_key="my-secret-key")
 
 
 def test_generate_question_sdk_not_available():
@@ -147,8 +147,9 @@ def test_generate_question_markdown_code_fence():
         patch("src.gemini.service.genai") as mock_genai,
         patch("src.gemini.service._GENAI_AVAILABLE", True),
     ):
-        mock_genai.GenerativeModel.return_value.generate_content.return_value = mock_response
-        mock_genai.configure = MagicMock()
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = mock_response
+        mock_genai.Client.return_value = mock_client
         service = GeminiService(api_key="test-key")
         result = service.generate_question("コンテキスト", "理科", 2)
 
@@ -163,10 +164,9 @@ def test_generate_question_unexpected_exception_no_retry():
         patch("src.gemini.service._GENAI_AVAILABLE", True),
         patch("src.gemini.service.time.sleep") as mock_sleep,
     ):
-        mock_genai.configure = MagicMock()
-        mock_genai.GenerativeModel.return_value.generate_content.side_effect = AttributeError(
-            "想定外エラー"
-        )
+        mock_client = MagicMock()
+        mock_client.models.generate_content.side_effect = AttributeError("想定外エラー")
+        mock_genai.Client.return_value = mock_client
         service = GeminiService(api_key="test-key")
         with pytest.raises(AttributeError, match="想定外エラー"):
             service.generate_question("コンテキスト", "算数", 3)
