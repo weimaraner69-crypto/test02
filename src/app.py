@@ -28,17 +28,26 @@ logger = logging.getLogger(__name__)
 class _MockDriveResource:
     """モックモード用 Drive API スタブ。テスト・開発環境でのみ使用する。"""
 
+    class _ListRequest:
+        """files().list() 相当のリクエストスタブ。"""
+
+        def execute(self) -> dict[str, list[dict[str, str]]]:
+            return {"files": []}
+
+    class _MediaRequest:
+        """files().get_media() 相当のリクエストスタブ。"""
+
+        def execute(self) -> bytes:
+            return b"{}"
+
     class _Files:
         """files() チェーン呼び出しをサポートするスタブ。"""
 
-        def list(self, **_kwargs: object) -> _MockDriveResource._Files:
-            return self
+        def list(self, **_kwargs: object) -> _MockDriveResource._ListRequest:
+            return _MockDriveResource._ListRequest()
 
-        def get_media(self, **_kwargs: object) -> _MockDriveResource._Files:
-            return self
-
-        def execute(self) -> dict:
-            return {"files": []}
+        def get_media(self, **_kwargs: object) -> _MockDriveResource._MediaRequest:
+            return _MockDriveResource._MediaRequest()
 
     def files(self) -> _MockDriveResource._Files:
         return self._Files()
@@ -54,7 +63,7 @@ def _build_drive_resource(auth_mode: str) -> object:
         Drive API リソースオブジェクト
 
     Raises:
-        RuntimeError: 本番モードで SDK が未インストールの場合
+        RuntimeError: 本番モードの Drive 認証が未実装の場合
     """
     if auth_mode == "mock":
         return _MockDriveResource()
