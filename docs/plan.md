@@ -353,15 +353,15 @@
 
 ### N-026 Flask セッション管理
 
-- **📋 予定（Backlog）**
+- **✅ 完了**
 - 目的：`web/app.py` にサーバーサイドセッションを追加し、ログイン状態をリクエスト間で維持できるようにする
 - 受入条件：
-  - [ ] `flask-login` または `flask` 標準セッションでログイン状態を維持
-  - [ ] `SECRET_KEY` 環境変数でセッション署名キーを設定（未設定時は起動エラー）
-  - [ ] 未ログイン時にログインページへリダイレクト
-  - [ ] セッションハイジャック対策（`SESSION_COOKIE_HTTPONLY=True`、`SESSION_COOKIE_SECURE=True`）が設定されている
-  - [ ] テストでセッションありの認証フローを検証する
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] `flask-login` または `flask` 標準セッションでログイン状態を維持
+  - [x] `SECRET_KEY` 環境変数でセッション署名キーを設定（未設定時は起動エラー）
+  - [x] 未ログイン時にログインページへリダイレクト
+  - [x] セッションハイジャック対策（`SESSION_COOKIE_HTTPONLY=True`、`SESSION_COOKIE_SECURE=True`）が設定されている
+  - [x] テストでセッションありの認証フローを検証する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-025
 - 触る領域：`web/app.py`、`tests/test_web_app.py`
 
@@ -391,10 +391,11 @@
 | N-023 GeminiService 実 API 接続 | [#37](https://github.com/weimaraner69-crypto/test02/issues/37) | 5-Future | ✅ 完了 | Feature |
 | N-024 DriveService Google Drive API 実装 | [#38](https://github.com/weimaraner69-crypto/test02/issues/38) | 5-Future | ✅ 完了 | Feature |
 | N-025 auth・gemini カバレッジ補強 | [#39](https://github.com/weimaraner69-crypto/test02/issues/39) | 5-Future | ✅ 完了 | QA |
-| N-026 Flask セッション管理 | [#40](https://github.com/weimaraner69-crypto/test02/issues/40) | 5-Future | 📋 予定 | Feature |
+| N-026 Flask セッション管理 | [#40](https://github.com/weimaraner69-crypto/test02/issues/40) | 5-Future | ✅ 完了 | Feature |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-14: N-026 完了（PR #46 マージ、GET /login と POST /login 分離、セッション管理強化、CI グリーン）
 - 2026-05-14: N-025 完了（PR #45 マージ、auth 100% / gemini 92%、CI グリーン）
 - 2026-05-14: N-024 完了（PR #44 マージ、Copilot 指摘3件対応、CI グリーン）
 - 2026-05-05: N-023 マージ完了（PR #43）、N-024〜N-026 自動実行開始
