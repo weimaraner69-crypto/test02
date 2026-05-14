@@ -19,9 +19,12 @@ https://opentelemetry.io/docs/specs/semconv/gen-ai/
 
 import functools
 import logging
+import os
+import sqlite3
 from collections import deque
 from collections.abc import Callable
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, ParamSpec, TypeVar
 
 logger = logging.getLogger(__name__)
@@ -45,8 +48,110 @@ _CONSTRAINT_EVENT_HISTORY_LIMIT = 200
 _constraint_event_history: deque[dict[str, str]] = deque(maxlen=_CONSTRAINT_EVENT_HISTORY_LIMIT)
 
 
+def _get_history_db_path() -> str | None:
+    """履歴永続化先の SQLite パスを返す。"""
+    database_path = os.environ.get("DATABASE_PATH", "data/mirastudy.db")
+    if not database_path or database_path == ":memory:":
+        return None
+
+    path_obj = Path(database_path)
+    if path_obj.is_absolute() or ".." in path_obj.parts:
+        logger.warning("制約履歴の永続化先が不正なためメモリのみで動作します: %s", database_path)
+        return None
+    return database_path
+
+
+def _ensure_history_table(connection: sqlite3.Connection) -> None:
+    """制約イベント履歴テーブルを初期化する。"""
+    with connection:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS constraint_event_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                event_name TEXT NOT NULL,
+                uid TEXT NOT NULL
+            )
+            """
+        )
+
+
+def _append_history_to_sqlite(timestamp: str, event_name: str, uid: str) -> None:
+    """制約イベント履歴を SQLite に保存する。"""
+    db_path = _get_history_db_path()
+    if db_path is None:
+        return
+
+    try:
+        with sqlite3.connect(db_path) as connection:
+            _ensure_history_table(connection)
+            connection.execute(
+                (
+                    "INSERT INTO constraint_event_history "
+                    "(timestamp, event_name, uid) VALUES (?, ?, ?)"
+                ),
+                (timestamp, event_name, uid),
+            )
+    except sqlite3.Error as error:
+        logger.warning("制約履歴の永続化に失敗しました: %s", error)
+
+
+def _load_recent_history_from_sqlite(
+    limit: int,
+    offset: int,
+    event_name: str | None = None,
+) -> list[dict[str, str]]:
+    """SQLite から制約イベント履歴を取得する。"""
+    db_path = _get_history_db_path()
+    if db_path is None:
+        return []
+
+    try:
+        with sqlite3.connect(db_path) as connection:
+            _ensure_history_table(connection)
+            if event_name:
+                rows = connection.execute(
+                    """
+                    SELECT timestamp, event_name, uid
+                    FROM constraint_event_history
+                    WHERE event_name = ?
+                    ORDER BY id DESC
+                    LIMIT ? OFFSET ?
+                    """,
+                    (event_name, limit, offset),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    """
+                    SELECT timestamp, event_name, uid
+                    FROM constraint_event_history
+                    ORDER BY id DESC
+                    LIMIT ? OFFSET ?
+                    """,
+                    (limit, offset),
+                ).fetchall()
+    except sqlite3.Error as error:
+        logger.warning("制約履歴の読み込みに失敗しました: %s", error)
+        return []
+
+    return [
+        {"timestamp": timestamp, "event_name": event_name, "uid": uid}
+        for timestamp, event_name, uid in rows
+    ]
+
+
+def _validate_pagination(limit: int, offset: int) -> tuple[int, int]:
+    """履歴取得のページング引数を検証する。"""
+    if limit < 0:
+        raise ValueError("limit は 0 以上で指定してください")
+    if offset < 0:
+        raise ValueError("offset は 0 以上で指定してください")
+    return min(limit, _CONSTRAINT_EVENT_HISTORY_LIMIT), offset
+
+
 def record_constraint_event(event_name: str, uid: str | None = None) -> None:
     """制約イベントを記録する。"""
+    timestamp = datetime.now(tz=UTC).isoformat().replace("+00:00", "Z")
     if event_name not in _constraint_event_counts:
         _constraint_event_counts[event_name] = 0
         _constraint_event_users[event_name] = set()
@@ -55,11 +160,12 @@ def record_constraint_event(event_name: str, uid: str | None = None) -> None:
         _constraint_event_users[event_name].add(uid)
     _constraint_event_history.append(
         {
-            "timestamp": datetime.now(tz=UTC).isoformat().replace("+00:00", "Z"),
+            "timestamp": timestamp,
             "event_name": event_name,
             "uid": uid or "-",
         }
     )
+    _append_history_to_sqlite(timestamp, event_name, uid or "-")
     logger.warning(
         "constraint_event name=%s uid=%s count=%d",
         event_name,
@@ -90,10 +196,23 @@ def reset_constraint_metrics() -> None:
     _constraint_event_history.clear()
 
 
-def get_constraint_recent_events(limit: int = 200) -> list[dict[str, str]]:
+def get_constraint_recent_events(
+    limit: int = 200,
+    offset: int = 0,
+    event_name: str | None = None,
+) -> list[dict[str, str]]:
     """制約イベントの直近履歴を新しい順で返す。"""
-    safe_limit = max(1, min(limit, _CONSTRAINT_EVENT_HISTORY_LIMIT))
-    recent = list(_constraint_event_history)[-safe_limit:]
+    safe_limit, safe_offset = _validate_pagination(limit, offset)
+    if safe_limit == 0:
+        return []
+    sqlite_events = _load_recent_history_from_sqlite(safe_limit, safe_offset, event_name)
+    if sqlite_events:
+        return sqlite_events
+    recent = list(_constraint_event_history)[-(safe_offset + safe_limit) :]
+    if safe_offset:
+        recent = recent[:-safe_offset]
+    if event_name:
+        recent = [event for event in recent if event["event_name"] == event_name]
     recent.reverse()
     return recent
 

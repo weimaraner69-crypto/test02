@@ -8,6 +8,12 @@ from __future__ import annotations
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _observability_memory_db(monkeypatch: pytest.MonkeyPatch) -> None:
+    """observability テストは既定でメモリ DB を使用する。"""
+    monkeypatch.setenv("DATABASE_PATH", ":memory:")
+
+
 def test_init_tracer_no_exception() -> None:
     """init_tracer() が OTel 未インストール時に例外を出さないことを確認する。"""
     from src.observability.tracing import init_tracer
@@ -208,3 +214,39 @@ def test_constraint_recent_events_order_and_limit() -> None:
     assert recent3[0]["uid"] == "u4"
     assert recent3[1]["uid"] == "u3"
     assert recent3[2]["uid"] == "u2"
+
+
+def test_constraint_recent_events_offset_and_limit_validation() -> None:
+    """N-039: 履歴 API のページング引数が制約どおりに動作する。"""
+    from src.observability.tracing import get_constraint_recent_events, reset_constraint_metrics
+
+    reset_constraint_metrics()
+    assert get_constraint_recent_events(limit=0, offset=0) == []
+
+    with pytest.raises(ValueError, match="limit"):
+        get_constraint_recent_events(limit=-1, offset=0)
+
+    with pytest.raises(ValueError, match="offset"):
+        get_constraint_recent_events(limit=1, offset=-1)
+
+
+def test_constraint_recent_events_persist_across_reload(tmp_path) -> None:
+    """N-040: SQLite 永続化先を使うと、再ロード後も履歴が取得できる。"""
+    import importlib
+    from pathlib import Path
+
+    db_path = Path("data") / f"constraint_history_{tmp_path.name}.sqlite"
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setenv("DATABASE_PATH", str(db_path))
+        from src.observability import tracing
+
+        importlib.reload(tracing)
+        tracing.reset_constraint_metrics()
+        tracing.record_constraint_event("c003_user_limit", "u1")
+        tracing.record_constraint_event("c004_session_warning", "u2")
+
+        importlib.reload(tracing)
+        events = tracing.get_constraint_recent_events(limit=2, offset=0)
+
+    assert [event["uid"] for event in events] == ["u2", "u1"]
+    db_path.unlink(missing_ok=True)

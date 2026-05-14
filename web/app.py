@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 import os
 
-from flask import Flask, jsonify, redirect, render_template_string, session, url_for
+from flask import Flask, jsonify, redirect, render_template_string, request, session, url_for
 from src.auth.service import AuthService
 from src.core.config import AppConfig
 from src.core.exceptions import (
@@ -64,24 +64,81 @@ def health() -> tuple:
 def admin_constraint_metrics():
     """管理者向け: C-003/C-004 メトリクスを返す。"""
     if "uid" not in session:
+        logger.warning("admin_constraint_metrics denied: unauthenticated")
         return redirect(url_for("login"))
 
     if not _has_metrics_admin_permission():
+        logger.warning(
+            "admin_constraint_metrics denied: uid=%s role=%s",
+            session.get("uid", "-"),
+            session.get("role", "-"),
+        )
         return jsonify({"error": "forbidden"}), 403
 
-    return jsonify(get_constraint_metrics()), 200
+    metrics = get_constraint_metrics()
+    logger.info(
+        "admin_constraint_metrics allowed: uid=%s role=%s count=%d",
+        session.get("uid", "-"),
+        session.get("role", "-"),
+        metrics.get("total_events", 0),
+    )
+    return jsonify(metrics), 200
 
 
 @app.route("/admin/metrics/constraints/history", methods=["GET"])
 def admin_constraint_metrics_history():
     """管理者向け: C-003/C-004 制約イベント履歴を返す。"""
     if "uid" not in session:
+        logger.warning("admin_constraint_metrics_history denied: unauthenticated")
         return redirect(url_for("login"))
 
     if not _has_metrics_admin_permission():
+        logger.warning(
+            "admin_constraint_metrics_history denied: uid=%s role=%s",
+            session.get("uid", "-"),
+            session.get("role", "-"),
+        )
         return jsonify({"error": "forbidden"}), 403
 
-    return jsonify({"events": get_constraint_recent_events()}), 200
+    raw_limit = request.args.get("limit", default="50")
+    raw_offset = request.args.get("offset", default="0")
+    event_name = request.args.get("event_name", default="").strip() or None
+    try:
+        limit = int(raw_limit)
+        offset = int(raw_offset)
+        if event_name is None:
+            events = get_constraint_recent_events(limit=limit, offset=offset)
+        else:
+            events = get_constraint_recent_events(
+                limit=limit,
+                offset=offset,
+                event_name=event_name,
+            )
+    except ValueError:
+        return jsonify({"error": "invalid_pagination"}), 400
+
+    logger.info(
+        (
+            "admin_constraint_metrics_history allowed: uid=%s role=%s "
+            "limit=%d offset=%d event_name=%s count=%d"
+        ),
+        session.get("uid", "-"),
+        session.get("role", "-"),
+        min(limit, 200),
+        offset,
+        event_name or "-",
+        len(events),
+    )
+    response_payload = {
+        "events": events,
+        "limit": min(limit, 200),
+        "offset": offset,
+        "count": len(events),
+    }
+    if event_name is not None:
+        response_payload["event_name"] = event_name
+
+    return jsonify(response_payload), 200
 
 
 @app.route("/")

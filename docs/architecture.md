@@ -17,7 +17,7 @@ src/
 ├─ permissions/     ロールと権限制御
 ├─ user/            SQLite によるプロファイル・学習進捗の永続化
 ├─ learning/        学習サービス（コンテンツ配信・問題生成・進捗集計）
-├─ observability/   OpenTelemetry 計装（オプショナル）
+├─ observability/   OpenTelemetry 計装 + 制約イベント履歴の観測
 └─ sample/          Design by Contract のサンプル実装
 ```
 
@@ -53,6 +53,13 @@ src/
 - 家族メンバー一覧の参照
 - 学習ランタイム状態（レート履歴・セッション開始時刻）の保存・取得
 
+### observability/
+
+- OpenTelemetry GenAI Semantic Conventions に基づくトレース計装
+- OTel 未導入環境では no-op で動作する
+- C-003/C-004 制約イベントの集計・直近履歴・SQLite 永続化を担う
+- 履歴の永続化先は `DATABASE_PATH` に従い、同一 DB を再利用して再起動後の履歴参照を可能にする
+
 ### drive/
 
 - FR-030（PDF 一覧取得）と FR-031（メタデータ取得）を実現する `DriveService` を提供する
@@ -82,7 +89,7 @@ src/
 補足:
 
 - C-003/C-004 判定に必要なランタイム状態は `learning_runtime_state` テーブルに保存される
-- 同一 DB を利用する限り、プロセス再起動後もレート履歴・セッション開始時刻を再利用できる
+- 同一 DB を利用する限り、プロセス再起動後もレート履歴・セッション開始時刻・制約イベント履歴を再利用できる
 ```
 
 ## 依存ルール

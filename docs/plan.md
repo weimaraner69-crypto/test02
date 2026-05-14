@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-038 完了）
+- フェーズ：**Advanced**（N-001〜N-042 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-038 まで完了。Next を N-039〜N-041 に再編（2026-05-14）
+- 直近の重要決定：N-042 まで完了。Next を N-043〜N-045 に再編（2026-05-14）
 
 ## ロードマップ（概略）
 
@@ -32,9 +32,9 @@
 
 ## Next（自動実行対象：最大3件）
 
-1. **N-039** 制約イベント履歴 API のページング対応
-2. **N-040** 制約イベント履歴の永続化（SQLite）
-3. **N-041** 管理者メトリクス API の認証監査ログ追加
+1. **N-043** C-003/C-004 履歴 API のエクスポート形式追加
+2. **N-044** 制約イベント履歴の保持期間・自動削除
+3. **N-045** 管理者監査ログの request_id 付与
 
 ## Backlog（保留）
 
@@ -517,38 +517,86 @@
 
 ### N-039 制約イベント履歴 API のページング対応
 
-- **📋 予定（Backlog）**
+- **✅ 完了（2026-05-14）**
 - 目的：履歴 API の応答サイズを制御し、運用時の取得負荷を下げる
 - 受入条件：
-  - [ ] `limit` / `offset` パラメータを追加する
-  - [ ] 境界値テスト（0、上限超過、負値）を追加する
-  - [ ] `docs/runbook.md` に利用例を追記する
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] `limit` / `offset` パラメータを追加する
+  - [x] 境界値テスト（0、上限超過、負値）を追加する
+  - [x] `docs/runbook.md` に利用例を追記する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-037
 - 触る領域：`web/app.py`、`src/observability/tracing.py`、`tests/`、`docs/runbook.md`
 
 ### N-040 制約イベント履歴の永続化（SQLite）
 
-- **📋 予定（Backlog）**
+- **✅ 完了（2026-05-14）**
 - 目的：プロセス再起動後も制約イベント履歴を保持し、運用調査の再現性を高める
 - 受入条件：
-  - [ ] SQLite テーブルを追加する
-  - [ ] 履歴保存・取得を実装する
-  - [ ] 再起動後の履歴継続をテストで検証する
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] SQLite テーブルを追加する
+  - [x] 履歴保存・取得を実装する
+  - [x] 再起動後の履歴継続をテストで検証する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-039
 - 触る領域：`src/user/profile.py`、`src/observability/`、`tests/`
 
 ### N-041 管理者メトリクス API の認証監査ログ追加
 
-- **📋 予定（Backlog）**
+- **✅ 完了（2026-05-14）**
 - 目的：管理者 API へのアクセス成功/拒否を監査可能にし、運用時の追跡性を高める
 - 受入条件：
-  - [ ] 成功アクセス・拒否アクセスを構造化ログで出力する
-  - [ ] テストでログ出力を検証する
-  - [ ] `docs/runbook.md` に監査確認手順を追記する
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] 成功アクセス・拒否アクセスを構造化ログで出力する
+  - [x] テストでログ出力を検証する
+  - [x] `docs/runbook.md` に監査確認手順を追記する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-040
+- 触る領域：`web/app.py`、`tests/test_web_app.py`、`docs/runbook.md`
+
+### N-042 C-003/C-004 履歴 API の event_name フィルタ追加
+
+- **✅ 完了（2026-05-14）**
+- 目的：制約イベント履歴を event_name で絞り込み、運用時の調査を容易にする
+- 受入条件：
+  - [x] event_name フィルタを追加する
+  - [x] フィルタ時のテストを追加する
+  - [x] runbook に利用例を追記する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-041
+- 触る領域：`src/observability/tracing.py`、`web/app.py`、`tests/`、`docs/runbook.md`
+
+### N-043 C-003/C-004 履歴 API のエクスポート形式追加
+
+- **📋 予定（Backlog）**
+- 目的：制約イベント履歴を JSON 以外の形式でも扱えるようにし、運用・分析をしやすくする
+- 受入条件：
+  - [ ] export 形式（JSON/CSV など）を選択できる
+  - [ ] 出力形式ごとのテストを追加する
+  - [ ] runbook にサンプルを追記する
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-042
+- 触る領域：`web/app.py`、`tests/`、`docs/runbook.md`
+
+### N-044 制約イベント履歴の保持期間・自動削除
+
+- **📋 予定（Backlog）**
+- 目的：制約イベント履歴のサイズを制御し、SQLite の肥大化を防ぐ
+- 受入条件：
+  - [ ] 保持期間または保持件数の削除ロジックを実装する
+  - [ ] 削除処理のテストを追加する
+  - [ ] runbook に運用手順を追記する
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-043
+- 触る領域：`src/observability/tracing.py`、`tests/`、`docs/runbook.md`
+
+### N-045 管理者監査ログの request_id 付与
+
+- **📋 予定（Backlog）**
+- 目的：管理者 API の監査ログに request_id を付与し、追跡性を向上させる
+- 受入条件：
+  - [ ] request_id を監査ログへ含める
+  - [ ] テストで request_id の出力を検証する
+  - [ ] runbook に確認手順を追記する
+  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+- 依存：N-044
 - 触る領域：`web/app.py`、`tests/test_web_app.py`、`docs/runbook.md`
 
 ## GitHub Issue / Project 対応表
@@ -590,12 +638,18 @@
 | N-036 C-003/C-004 管理者メトリクス API の認可強化（parent/admin 分離） | [#56](https://github.com/weimaraner69-crypto/test02/issues/56) | 5-Future | ✅ 完了 | Feature |
 | N-037 C-003/C-004 イベントの時系列履歴化（直近N件保持） | [#57](https://github.com/weimaraner69-crypto/test02/issues/57) | 5-Future | ✅ 完了 | Feature |
 | N-038 可観測性 API の契約テスト（スキーマ固定）追加 | [#58](https://github.com/weimaraner69-crypto/test02/issues/58) | 5-Future | ✅ 完了 | QA |
-| N-039 制約イベント履歴 API のページング対応 | [#59](https://github.com/weimaraner69-crypto/test02/issues/59) | 5-Future | 📋 予定 | Feature |
-| N-040 制約イベント履歴の永続化（SQLite） | [#60](https://github.com/weimaraner69-crypto/test02/issues/60) | 5-Future | 📋 予定 | Feature |
-| N-041 管理者メトリクス API の認証監査ログ追加 | [#61](https://github.com/weimaraner69-crypto/test02/issues/61) | 5-Future | 📋 予定 | Maintenance |
+| N-039 制約イベント履歴 API のページング対応 | [#59](https://github.com/weimaraner69-crypto/test02/issues/59) | 5-Future | ✅ 完了 | Feature |
+| N-040 制約イベント履歴の永続化（SQLite） | [#60](https://github.com/weimaraner69-crypto/test02/issues/60) | 5-Future | ✅ 完了 | Feature |
+| N-041 管理者メトリクス API の認証監査ログ追加 | [#61](https://github.com/weimaraner69-crypto/test02/issues/61) | 5-Future | ✅ 完了 | Maintenance |
+| N-042 C-003/C-004 履歴 API の event_name フィルタ追加 | [#62](https://github.com/weimaraner69-crypto/test02/issues/62) | 5-Future | ✅ 完了 | Feature |
+| N-043 C-003/C-004 履歴 API のエクスポート形式追加 | [#63](https://github.com/weimaraner69-crypto/test02/issues/63) | 5-Future | 📋 予定 | Feature |
+| N-044 制約イベント履歴の保持期間・自動削除 | [#64](https://github.com/weimaraner69-crypto/test02/issues/64) | 5-Future | 📋 予定 | Maintenance |
+| N-045 管理者監査ログの request_id 付与 | [#65](https://github.com/weimaraner69-crypto/test02/issues/65) | 5-Future | 📋 予定 | Maintenance |
 
 ## 直近の変更履歴（最大10件）
 
+- 2026-05-14: N-039/N-040/N-041/N-042 完了（ページング、SQLite 永続化、監査ログ、event_name フィルタを実装）
+- 2026-05-14: Next を再編（N-043/N-044/N-045 追加、Issue #63/#64/#65 作成）
 - 2026-05-14: N-036/N-037/N-038 完了（認可分離、イベント履歴化、API契約テストを実装）
 - 2026-05-14: Next を再編（N-039/N-040/N-041 追加、Issue #59/#60/#61 作成）
 - 2026-05-14: N-033/N-034/N-035 完了（管理者メトリクス API、監視閾値定義、負荷/再現性テストを追加）

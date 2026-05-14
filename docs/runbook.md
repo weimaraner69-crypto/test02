@@ -176,6 +176,14 @@ C-003（レート制限）/ C-004（セッション時間制限）の発生状�
 .venv/bin/python -c "from src.observability.tracing import get_constraint_metrics; print(get_constraint_metrics())"
 ```
 
+履歴確認（ローカル）:
+
+```bash
+.venv/bin/python -c "from src.observability.tracing import get_constraint_recent_events; import json; print(json.dumps(get_constraint_recent_events(limit=5), ensure_ascii=False))"
+```
+
+制約イベント履歴は `DATABASE_PATH` の SQLite に永続化される。アプリ再起動後に同じ `DATABASE_PATH` を使うと、直近履歴を再取得できる。
+
 一次対応:
 
 1. `c003_*` が急増している場合はアクセス集中を疑い、短時間のリトライ制御を強化する
@@ -211,6 +219,18 @@ C-003（レート制限）/ C-004（セッション時間制限）の発生状�
       "c004_session_forced_stop": 0
    }
 }
+```
+
+ページング利用例:
+
+```bash
+curl "http://localhost:5001/admin/metrics/constraints/history?limit=20&offset=0"
+```
+
+フィルタ利用例:
+
+```bash
+curl "http://localhost:5001/admin/metrics/constraints/history?limit=20&offset=0&event_name=c004_session_warning"
 ```
 
 ### CI 失敗
