@@ -8,9 +8,9 @@
 
 ## 現状（Status）
 
-- フェーズ：**Advanced**（N-001〜N-042 完了）
+- フェーズ：**Advanced**（N-001〜N-043 完了）
 - ブロッカー：なし
-- 直近の重要決定：N-042 まで完了。Next を N-043〜N-045 に再編（2026-05-14）
+- 直近の重要決定：N-043 まで完了。Next を N-044〜N-045 に再編（2026-05-14）
 
 ## ロードマップ（概略）
 
@@ -32,9 +32,8 @@
 
 ## Next（自動実行対象：最大3件）
 
-1. **N-043** C-003/C-004 履歴 API のエクスポート形式追加
-2. **N-044** 制約イベント履歴の保持期間・自動削除
-3. **N-045** 管理者監査ログの request_id 付与
+1. **N-044** 制約イベント履歴の保持期間・自動削除
+2. **N-045** 管理者監査ログの request_id 付与
 
 ## Backlog（保留）
 
@@ -565,13 +564,13 @@
 
 ### N-043 C-003/C-004 履歴 API のエクスポート形式追加
 
-- **📋 予定（Backlog）**
+- **✅ 完了（2026-05-14）**
 - 目的：制約イベント履歴を JSON 以外の形式でも扱えるようにし、運用・分析をしやすくする
 - 受入条件：
-  - [ ] export 形式（JSON/CSV など）を選択できる
-  - [ ] 出力形式ごとのテストを追加する
-  - [ ] runbook にサンプルを追記する
-  - [ ] CI 通過（全 passed・カバレッジ 80% 以上）
+  - [x] export 形式（JSON/CSV など）を選択できる
+  - [x] 出力形式ごとのテストを追加する
+  - [x] runbook にサンプルを追記する
+  - [x] CI 通過（全 passed・カバレッジ 80% 以上）
 - 依存：N-042
 - 触る領域：`web/app.py`、`tests/`、`docs/runbook.md`
 
@@ -642,14 +641,15 @@
 | N-040 制約イベント履歴の永続化（SQLite） | [#60](https://github.com/weimaraner69-crypto/test02/issues/60) | 5-Future | ✅ 完了 | Feature |
 | N-041 管理者メトリクス API の認証監査ログ追加 | [#61](https://github.com/weimaraner69-crypto/test02/issues/61) | 5-Future | ✅ 完了 | Maintenance |
 | N-042 C-003/C-004 履歴 API の event_name フィルタ追加 | [#62](https://github.com/weimaraner69-crypto/test02/issues/62) | 5-Future | ✅ 完了 | Feature |
-| N-043 C-003/C-004 履歴 API のエクスポート形式追加 | [#63](https://github.com/weimaraner69-crypto/test02/issues/63) | 5-Future | 📋 予定 | Feature |
+| N-043 C-003/C-004 履歴 API のエクスポート形式追加 | [#63](https://github.com/weimaraner69-crypto/test02/issues/63) | 5-Future | ✅ 完了 | Feature |
 | N-044 制約イベント履歴の保持期間・自動削除 | [#64](https://github.com/weimaraner69-crypto/test02/issues/64) | 5-Future | 📋 予定 | Maintenance |
 | N-045 管理者監査ログの request_id 付与 | [#65](https://github.com/weimaraner69-crypto/test02/issues/65) | 5-Future | 📋 予定 | Maintenance |
 
 ## 直近の変更履歴（最大10件）
 
 - 2026-05-14: N-039/N-040/N-041/N-042 完了（ページング、SQLite 永続化、監査ログ、event_name フィルタを実装）
-- 2026-05-14: Next を再編（N-043/N-044/N-045 追加、Issue #63/#64/#65 作成）
+- 2026-05-14: N-043 完了（履歴 API のエクスポート形式に CSV を追加）
+- 2026-05-14: Next を再編（N-044/N-045 追加、Issue #64/#65 作成）
 - 2026-05-14: N-036/N-037/N-038 完了（認可分離、イベント履歴化、API契約テストを実装）
 - 2026-05-14: Next を再編（N-039/N-040/N-041 追加、Issue #59/#60/#61 作成）
 - 2026-05-14: N-033/N-034/N-035 完了（管理者メトリクス API、監視閾値定義、負荷/再現性テストを追加）

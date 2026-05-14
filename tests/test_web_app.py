@@ -408,3 +408,55 @@ def test_admin_constraint_metrics_history_filters_by_event_name(client) -> None:
         offset=0,
         event_name="c004_session_warning",
     )
+
+
+def test_admin_constraint_metrics_history_supports_csv_export(client) -> None:
+    """N-043: 履歴 API が CSV 形式でエクスポートできる。"""
+    client.post("/login", follow_redirects=False)
+    with client.session_transaction() as sess:
+        sess["role"] = "admin"
+
+    history = [
+        {
+            "timestamp": "2026-05-14T00:00:00Z",
+            "event_name": "c003_user_limit",
+            "uid": "u1",
+        },
+        {
+            "timestamp": "2026-05-14T00:00:01Z",
+            "event_name": "c004_session_warning",
+            "uid": "u2",
+        },
+    ]
+    with patch("web.app.get_constraint_recent_events", return_value=history) as mock_get_events:
+        response = client.get(
+            "/admin/metrics/constraints/history?limit=2&offset=0&format=csv",
+            follow_redirects=False,
+        )
+
+    assert response.status_code == 200
+    assert response.mimetype == "text/csv"
+    assert response.headers["Content-Disposition"] == (
+        "attachment; filename=constraint-events-history.csv"
+    )
+    assert response.data.decode("utf-8").splitlines() == [
+        "timestamp,event_name,uid",
+        "2026-05-14T00:00:00Z,c003_user_limit,u1",
+        "2026-05-14T00:00:01Z,c004_session_warning,u2",
+    ]
+    mock_get_events.assert_called_once_with(limit=2, offset=0)
+
+
+def test_admin_constraint_metrics_history_rejects_invalid_export_format(client) -> None:
+    """N-043: 未知の export 形式は 400 で拒否する。"""
+    client.post("/login", follow_redirects=False)
+    with client.session_transaction() as sess:
+        sess["role"] = "admin"
+
+    response = client.get(
+        "/admin/metrics/constraints/history?limit=5&offset=0&format=xml",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "invalid_export_format"}

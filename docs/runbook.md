@@ -233,6 +233,12 @@ curl "http://localhost:5001/admin/metrics/constraints/history?limit=20&offset=0"
 curl "http://localhost:5001/admin/metrics/constraints/history?limit=20&offset=0&event_name=c004_session_warning"
 ```
 
+CSV エクスポート例:
+
+```bash
+curl -OJ "http://localhost:5001/admin/metrics/constraints/history?limit=20&offset=0&format=csv"
+```
+
 ### CI 失敗
 
 1. GitHub Actions のログで失敗箇所を特定する

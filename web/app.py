@@ -5,6 +5,8 @@ AppConfig / AuthService / UserProfileService / GeminiService の現行 API に�
 
 from __future__ import annotations
 
+import csv
+import io
 import logging
 import os
 
@@ -52,6 +54,15 @@ def _has_metrics_admin_permission() -> bool:
     if not isinstance(role, str):
         return False
     return has_permission(role, Permission.MANAGE_API_KEY)
+
+
+def _render_constraint_events_csv(events: list[dict[str, str]]) -> str:
+    """制約イベント履歴を CSV 文字列に変換する。"""
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=["timestamp", "event_name", "uid"])
+    writer.writeheader()
+    writer.writerows(events)
+    return buffer.getvalue()
 
 
 @app.route("/health")
@@ -103,6 +114,10 @@ def admin_constraint_metrics_history():
     raw_limit = request.args.get("limit", default="50")
     raw_offset = request.args.get("offset", default="0")
     event_name = request.args.get("event_name", default="").strip() or None
+    export_format = request.args.get("format", default="json").strip().lower() or "json"
+    if export_format not in {"json", "csv"}:
+        return jsonify({"error": "invalid_export_format"}), 400
+
     try:
         limit = int(raw_limit)
         offset = int(raw_offset)
@@ -120,15 +135,27 @@ def admin_constraint_metrics_history():
     logger.info(
         (
             "admin_constraint_metrics_history allowed: uid=%s role=%s "
-            "limit=%d offset=%d event_name=%s count=%d"
+            "limit=%d offset=%d event_name=%s format=%s count=%d"
         ),
         session.get("uid", "-"),
         session.get("role", "-"),
         min(limit, 200),
         offset,
         event_name or "-",
+        export_format,
         len(events),
     )
+
+    if export_format == "csv":
+        csv_response = app.response_class(
+            _render_constraint_events_csv(events),
+            mimetype="text/csv; charset=utf-8",
+        )
+        csv_response.headers["Content-Disposition"] = (
+            "attachment; filename=constraint-events-history.csv"
+        )
+        return csv_response, 200
+
     response_payload = {
         "events": events,
         "limit": min(limit, 200),
